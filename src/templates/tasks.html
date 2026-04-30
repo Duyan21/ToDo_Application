@@ -1,0 +1,106 @@
+{% extends "index.html" %}
+
+{% block title %}My Tasks{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/task.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="task-wrapper">
+
+  <!-- HEADER -->
+  <div class="task-header">
+    <h1>📝 My Tasks</h1>
+    <button class="btn-add-task" id="btn-add-task">+ Thêm task</button>
+  </div>
+
+  <!-- Danh sách task -->
+  {% if tasks %}
+    {% for task in tasks %}
+    <div class="task-card {% if task.is_done %}done{% endif %}"
+         data-id="{{ task.id }}"
+         data-title="{{ task.title }}"
+         data-description="{{ task.description or '' }}"
+         data-deadline="{{ task.deadline.strftime('%Y-%m-%d') if task.deadline else '' }}"
+         data-priority="{{ task.priority }}"
+         data-reminder="{{ task.reminder_minutes }}">
+
+      <div class="task-info">
+        <div class="task-title">{{ task.title }}</div>
+        {% if task.description %}
+        <div class="task-description">{{ task.description }}</div>
+        {% endif %}
+        <div class="task-meta">
+          <span class="badge-priority badge-{{ task.priority }}">{{ task.priority }}</span>
+          {% if task.deadline %}
+          <span>📅 {{ task.deadline.strftime('%d/%m/%Y') }}</span>
+          {% endif %}
+          <span>{{ '✅ Hoàn thành' if task.is_done else '🕐 Đang chờ' }}</span>
+        </div>
+      </div>
+
+      <div class="task-actions">
+        {% if not task.is_done %}
+        <button class="btn-complete">✓</button>
+        <button class="btn-edit">✎</button>
+        {% endif %}
+        <button class="btn-delete">✕</button>
+      </div>
+
+    </div>
+    {% endfor %}
+  {% else %}
+    <div style="text-align:center; padding: 60px; color: #9ca3af;">
+      <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+      <div>Chưa có task nào. Bấm <strong>+ Thêm task</strong> để bắt đầu!</div>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- Tạo, sửa task -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <h2 id="modal-title">Tạo task mới</h2>
+    <input type="hidden" id="task-id">
+
+    <div class="form-group">
+      <label>Tiêu đề *</label>
+      <input type="text" id="input-title" placeholder="Nhập tiêu đề task...">
+    </div>
+
+    <div class="form-group">
+      <label>Mô tả</label>
+      <textarea id="input-description" rows="3" placeholder="Mô tả chi tiết..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Deadline</label>
+      <input type="date" id="input-deadline">
+    </div>
+
+    <div class="form-group">
+      <label>Mức ưu tiên</label>
+      <select id="input-priority">
+        <option value="low">🟢 Thấp</option>
+        <option value="medium" selected>🟡 Trung bình</option>
+        <option value="high">🔴 Cao</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Nhắc nhở trước (phút)</label>
+      <input type="number" id="input-reminder" placeholder="0" min="0">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-cancel">Hủy</button>
+      <button class="btn-save" id="btn-save">Lưu</button>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/task.js') }}"></script>
+{% endblock %}
