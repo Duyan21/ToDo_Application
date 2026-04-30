@@ -1,4 +1,47 @@
 $(document).ready(function () {
+  
+  // Auto-close alert function
+  function showAutoAlert(message, duration = 2000) {
+    $("#auto-alert-message").text(message);
+    $("#auto-alert").removeClass("hide").addClass("show");
+    
+    setTimeout(function() {
+      $("#auto-alert").removeClass("show").addClass("hide");
+      setTimeout(function() {
+        $("#auto-alert").removeClass("hide");
+      }, 300);
+    }, duration);
+  }
+  
+  // Logout functionality
+  $("#btn-logout").click(function () {
+    $.ajax({
+      url: "/api/logout",
+      type: "POST",
+      success: function (response) {
+        showAutoAlert(response.message);
+        setTimeout(function() {
+          window.location.href = "/signin";
+        }, 1000);
+      },
+      error: function (xhr) {
+        alert(xhr.responseJSON ? xhr.responseJSON.error : "Lỗi hệ thống");
+      }
+    });
+  });
+
+  
+  // Filter functionality
+  $(".filter-btn").click(function () {
+    var filterType = $(this).data("filter");
+    
+    // Update active button
+    $(".filter-btn").removeClass("active");
+    $(this).addClass("active");
+    
+    // Reload page with filter parameter
+    window.location.href = "/tasks?filter=" + filterType;
+  });
 
   // tạo task
   $("#btn-add-task").click(function () {
@@ -39,8 +82,10 @@ $(document).ready(function () {
       contentType: "application/json",
       data: JSON.stringify(data),
       success: function (response) {
-        alert(response.message);
-        location.reload();
+        showAutoAlert(response.message);
+        setTimeout(function() {
+          location.reload();
+        }, 1500);
       },
       error: function (xhr) {
         alert(xhr.responseJSON ? xhr.responseJSON.error : "Lỗi hệ thống");
@@ -62,28 +107,64 @@ $(document).ready(function () {
   });
 
   // Hoàn thành task 
-  $(".btn-complete").click(function () {
+  $(document).on("click", ".btn-complete", function () {
+    console.log("Complete button clicked");
     var taskId = $(this).closest(".task-card").data("id");
+    console.log("Task ID:", taskId);
     $.ajax({
       url: "/tasks/" + taskId + "/complete",
       type: "PUT",
       success: function (response) {
-        alert(response.message);
-        location.reload();
+        console.log("Complete success:", response);
+        showAutoAlert(response.message);
+        setTimeout(function() {
+          location.reload();
+        }, 1500);
+      },
+      error: function (xhr) {
+        console.log("Complete error:", xhr);
+        alert(xhr.responseJSON ? xhr.responseJSON.error : "Lỗi hệ thống");
+      }
+    });
+  });
+
+  // Chuyển task sang đang làm
+  $(document).on("click", ".btn-uncomplete", function () {
+    console.log("Uncomplete button clicked");
+    var taskId = $(this).closest(".task-card").data("id");
+    console.log("Task ID:", taskId);
+    $.ajax({
+      url: "/tasks/" + taskId + "/uncomplete",
+      type: "PUT",
+      success: function (response) {
+        console.log("Uncomplete success:", response);
+        showAutoAlert(response.message);
+        setTimeout(function() {
+          location.reload();
+        }, 1500);
+      },
+      error: function (xhr) {
+        console.log("Uncomplete error:", xhr);
+        alert(xhr.responseJSON ? xhr.responseJSON.error : "Lỗi hệ thống");
       }
     });
   });
 
   // Xóa task
   $(".btn-delete").click(function () {
-    if (!confirm("Ní có chắc muốn xóa task này không?")) return;
+    if (!confirm("Bạn có chắc muốn xóa task này không?")) return;
     var taskId = $(this).closest(".task-card").data("id");
     $.ajax({
       url: "/tasks/" + taskId + "/delete",
       type: "DELETE",
       success: function (response) {
-        alert(response.message);
-        location.reload();
+        showAutoAlert(response.message);
+        setTimeout(function() {
+          location.reload();
+        }, 1500);
+      },
+      error: function (xhr) {
+        alert(xhr.responseJSON ? xhr.responseJSON.error : "Lỗi hệ thống");
       }
     });
   });
