@@ -2,6 +2,7 @@ import logging
 from flask import Flask
 from src.routes.auth import auth_bp
 from src.routes.home import home_bp
+from src.routes.task import task_bp
 from src.database.models import db
 
 def create_app():
@@ -23,5 +24,6 @@ def create_app():
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(home_bp)
+    app.register_blueprint(task_bp)
 
     return app
