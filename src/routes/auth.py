@@ -21,6 +21,7 @@ def signin_page():
 @validate_input(
     required_fields=['name', 'email', 'password'],
     field_types={'name': str, 'email': str, 'password': str},
+    email_fields=['email'],
     min_length={'password': 8}
 )
 def register():
@@ -45,7 +46,8 @@ def register():
 @auth_bp.route('/api/signin', methods=['POST'])
 @validate_input(
     required_fields=['email', 'password'],
-    field_types={'email': str, 'password': str}
+    field_types={'email': str, 'password': str},
+    email_fields=['email']
 )
 def signin():
     data = request.get_json()
