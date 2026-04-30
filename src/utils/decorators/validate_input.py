@@ -1,6 +1,9 @@
 from functools import wraps
 import logging
+import re
 from flask import jsonify, request
+
+_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 logger = logging.getLogger(__name__)
 
@@ -13,11 +16,11 @@ def validate_input(**rules):
             required_rules = rules.get('required_fields', [])
             field_types = rules.get('field_types', {})
             enum_fields = rules.get('enum_fields', {})
+            min_length = rules.get('min_length', {})
+            email_fields = rules.get('email_fields', [])
 
             missing = [f for f in required_rules 
                       if f not in data or data.get(f) is None]
-
-            missing = list(filter(lambda f: f not in data or data.get(f) is None, required_rules))
             
             if missing:
                 msg = f"Thiếu: {', '.join(missing)}"
@@ -36,6 +39,20 @@ def validate_input(**rules):
                     msg = f"'{field}' phải là: {', '.join(map(str, values))}"
                     logger.warning("Validation failed for %s: %s", func.__name__, msg)
                     return jsonify({"error": msg}), 400
+
+            for field, min_len in min_length.items():
+                if field in data and data[field] is not None:
+                    if len(data[field]) < min_len:
+                        msg = f"'{field}' phải có ít nhất {min_len} ký tự"
+                        logger.warning("Validation failed for %s: %s", func.__name__, msg)
+                        return jsonify({"error": msg}), 400
+
+            for field in email_fields:
+                if field in data and data[field] is not None:
+                    if not _EMAIL_RE.match(data[field]):
+                        msg = f"'{field}' không đúng định dạng email"
+                        logger.warning("Validation failed for %s: %s", func.__name__, msg)
+                        return jsonify({"error": msg}), 400
 
             logger.info("Validation passed for %s", func.__name__)
             return func(*args, **kwargs)

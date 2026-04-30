@@ -33,7 +33,7 @@ $(document).ready(function () {
       }),
       success: function (response) {
         alert(response.message);
-        window.location.href = "/tasks";
+        window.location.href = "/home";
       },
       error: function (xhr) {
         alert(xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Đăng nhập không thành công');

@@ -3,11 +3,14 @@ import os
 from flask import Flask
 import urllib
 from src.routes.auth import auth_bp
+from src.routes.home import home_bp
 from src.routes.task import task_bp
 from src.routes.notification import noti_bp
 from src.database.models import db
 from apscheduler.schedulers.background import BackgroundScheduler
 from src.services.notification_service import NotificationService
+
+load_dotenv()
 
 def create_app():
     if not logging.getLogger().handlers:
@@ -45,6 +48,7 @@ def create_app():
     db.init_app(app)
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(home_bp)
     app.register_blueprint(task_bp)
     app.register_blueprint(noti_bp)
 

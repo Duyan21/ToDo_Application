@@ -4,43 +4,10 @@ A modern task management application with real-time notifications and database s
 
 ## 🎓 Project Information
 
-**Course:** Python Programming Techniques  
-**University:** University of Information Technology - UIT  
-**Semester:** Ky 2 2025-2026  
-**Technology Stack:** Python Flask + SQL Server  
-
-**Project Objectives:**
 - Build a complete task management application
 - Implement real-time notification system
 - Integrate SQL Server database
 - Apply practical web programming knowledge
-
-## 🚀 Features
-
-### Core Task Management
-- ✅ Create, edit, delete tasks
-- ✅ Set priorities (High, Medium, Low)
-- ✅ Track task status (Pending, Completed, Overdue)
-- ✅ Set deadlines and reminders
-- ✅ Task descriptions and metadata
-
-### Real-time Notification System
-- 🔔 **Overdue Notifications** - Automatic alerts for missed deadlines
-- 🔔 **Reminder Notifications** - Customizable time-based reminders
-- 🔔 **Real-time Sync** - Background job updates every 3 seconds
-- 🔔 **Visual Feedback** - Smooth animations for read/unread states
-- 🔔 **Batch Actions** - Mark all as read, clear all notifications
-
-### Database Support
-- 🗄️ **SQL Server** - Production-ready with full schema
-- 🗄️ **SQLite** - Development fallback
-- 🗄️ **Auto-setup** - One-click database creation
-
-### User Experience
-- 🎨 **Modern UI** - Clean, responsive design
-- 🎨 **Vietnamese Support** - Full Unicode compatibility
-- 🎨 **Mobile Friendly** - Responsive layout
-- 🎨 **Smooth Animations** - Professional micro-interactions
 
 ## 📋 Prerequisites
 
@@ -114,11 +81,6 @@ DB_DRIVER=ODBC Driver 17 for SQL Server
 DB_HOST=localhost\SQL2019
 DB_NAME=todo_app_db
 DB_DRIVER=ODBC Driver 18 for SQL Server
-
-# Option 4: Azure SQL
-DB_HOST=your-server.database.windows.net
-DB_NAME=todo_app_db
-DB_DRIVER=ODBC Driver 17 for SQL Server
 ```
 
 ### Troubleshooting
