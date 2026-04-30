@@ -23,12 +23,11 @@ class Task(db.Model):
     description = db.Column(db.Text)
     is_done = db.Column(db.Boolean, default=False)
     deadline = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    deadline = db.Column(db.DateTime, nullable=True)
     priority = db.Column(db.String(20), default='medium')
     status = db.Column(db.String(20), default='pending')
     reminder_minutes = db.Column(db.Integer, default=0)
-
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
 
 class File(db.Model):
     __tablename__ = 'Files'

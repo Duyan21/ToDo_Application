@@ -10,7 +10,7 @@
 
 <div class="task-wrapper">
 
-  <!-- HEADER -->
+  <!-- Header -->
   <div class="task-header">
     <h1>📝 My Tasks</h1>
     <button class="btn-add-task" id="btn-add-task">+ Thêm task</button>
@@ -101,6 +101,8 @@
     </div>
   </div>
 </div>
+{% endblock %}
 
-<script src="{{ url_for('static', filename='js/task.js') }}"></script>
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/task.js') }}"></script>
 {% endblock %}
