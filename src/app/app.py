@@ -1,9 +1,13 @@
 import logging
+import os
 from flask import Flask
+from dotenv import load_dotenv
 from src.routes.auth import auth_bp
 from src.routes.home import home_bp
 from src.routes.task import task_bp
 from src.database.models import db
+
+load_dotenv()
 
 def create_app():
     if not logging.getLogger().handlers:
@@ -17,7 +21,7 @@ def create_app():
         template_folder='../templates',
         static_folder='../static'
     )
-    app.secret_key = '656664296eaf2a66f9c6d6c527e586c849ad9f68cf519f191095e1f596d77cda'
+    app.secret_key = os.getenv('SECRET_KEY')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydb.sqlite'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
