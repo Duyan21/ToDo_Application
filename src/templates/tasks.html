@@ -13,17 +13,55 @@
   <!-- Header -->
   <div class="task-header">
     <h1>📝 My Tasks</h1>
+    
+    <!-- Notification Bell -->
+    <div class="notification-wrapper">
+      <button class="notification-bell" id="notification-bell">
+        🔔
+        <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+      </button>
+      
+      <!-- Notification Dropdown -->
+      <div class="notification-dropdown" id="notification-dropdown">
+        <div class="notification-header">
+          <h3>Thông báo</h3>
+          <div class="notification-actions">
+            <button class="mark-all-read" id="mark-all-read">Đọc tất cả</button>
+            <button class="clear-all" id="clear-all">Xóa tất cả</button>
+          </div>
+        </div>
+        <div class="notification-list" id="notification-list">
+          <div class="no-notifications">Không có thông báo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Actions Bar -->
+  <div class="actions-bar">
     <button class="btn-add-task" id="btn-add-task">+ Thêm task</button>
+    <button class="btn-logout" id="btn-logout">Đăng xuất</button>
+  </div>
+
+  <!-- Filter Buttons -->
+  <div class="filter-section">
+    <div class="filter-buttons">
+      <button class="filter-btn {% if current_filter == 'all' %}active{% endif %}" data-filter="all">Toàn bộ</button>
+      <button class="filter-btn {% if current_filter == 'pending' %}active{% endif %}" data-filter="pending">Đang làm</button>
+      <button class="filter-btn {% if current_filter == 'overdue' %}active{% endif %}" data-filter="overdue">Quá hạn</button>
+      <button class="filter-btn {% if current_filter == 'completed' %}active{% endif %}" data-filter="completed">Đã hoàn thành</button>
+    </div>
   </div>
 
   <!-- Danh sách task -->
+  <div id="task-list">
   {% if tasks %}
     {% for task in tasks %}
     <div class="task-card {% if task.is_done %}done{% endif %}"
          data-id="{{ task.id }}"
          data-title="{{ task.title }}"
          data-description="{{ task.description or '' }}"
-         data-deadline="{{ task.deadline.strftime('%Y-%m-%d') if task.deadline else '' }}"
+         data-deadline="{{ task.deadline.strftime('%Y-%m-%dT%H:%M') if task.deadline else '' }}"
          data-priority="{{ task.priority }}"
          data-reminder="{{ task.reminder_minutes }}">
 
@@ -35,7 +73,7 @@
         <div class="task-meta">
           <span class="badge-priority badge-{{ task.priority }}">{{ task.priority }}</span>
           {% if task.deadline %}
-          <span>📅 {{ task.deadline.strftime('%d/%m/%Y') }}</span>
+          <span>📅 {{ task.deadline.strftime('%d/%m/%Y %H:%M') }}</span>
           {% endif %}
           <span>{{ '✅ Hoàn thành' if task.is_done else '🕐 Đang chờ' }}</span>
         </div>
@@ -45,6 +83,8 @@
         {% if not task.is_done %}
         <button class="btn-complete">✓</button>
         <button class="btn-edit">✎</button>
+        {% else %}
+        <button class="btn-uncomplete">✓</button>
         {% endif %}
         <button class="btn-delete">✕</button>
       </div>
@@ -78,7 +118,7 @@
 
     <div class="form-group">
       <label>Deadline</label>
-      <input type="date" id="input-deadline">
+      <input type="datetime-local" id="input-deadline">
     </div>
 
     <div class="form-group">
@@ -101,8 +141,15 @@
     </div>
   </div>
 </div>
+
+<!-- Auto-close Alert -->
+<div id="auto-alert" class="auto-alert">
+  <span id="auto-alert-message">Thao tác thành công!</span>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
     <script src="{{ url_for('static', filename='js/task.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notification.js') }}"></script>
 {% endblock %}
