@@ -1,6 +1,7 @@
 import logging
 from flask import Flask
 from src.routes.auth import auth_bp
+from src.routes.home import home_bp
 from src.routes.task import task_bp
 from src.database.models import db
 
@@ -16,12 +17,13 @@ def create_app():
         template_folder='../templates',
         static_folder='../static'
     )
-    app.secret_key = 'replace-with-a-secure-secret'
+    app.secret_key = '656664296eaf2a66f9c6d6c527e586c849ad9f68cf519f191095e1f596d77cda'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydb.sqlite'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(home_bp)
     app.register_blueprint(task_bp)
 
     return app
