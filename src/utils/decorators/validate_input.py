@@ -17,8 +17,6 @@ def validate_input(**rules):
 
             missing = [f for f in required_rules 
                       if f not in data or data.get(f) is None]
-
-            missing = list(filter(lambda f: f not in data or data.get(f) is None, required_rules))
             
             if missing:
                 msg = f"Thiếu: {', '.join(missing)}"
