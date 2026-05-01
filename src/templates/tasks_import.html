@@ -1,0 +1,136 @@
+{% extends "index.html" %}
+
+{% block title %}My Tasks{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tasks_import.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="task-wrapper">
+
+  <!-- Header -->
+  <div class="task-header">
+    <h1>📝 My Tasks</h1>
+
+    <!-- Notification Bell -->
+    <div class="notification-wrapper">
+      <button class="notification-bell" id="notification-bell">
+        🔔
+        <span class="notification-badge" id="notification-badge" style="display: none;">0</span>
+      </button>
+
+      <!-- Notification Dropdown -->
+      <div class="notification-dropdown" id="notification-dropdown">
+        <div class="notification-header">
+          <h3>Thông báo</h3>
+          <div class="notification-actions">
+            <button class="mark-all-read" id="mark-all-read">Đọc tất cả</button>
+            <button class="clear-all" id="clear-all">Xóa tất cả</button>
+          </div>
+        </div>
+        <div class="notification-list" id="notification-list">
+          <div class="no-notifications">Không có thông báo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions Bar -->
+  <div class="actions-bar">
+    <button class="btn-add-task" id="btn-add-task" type="button">← My Tasks</button>
+    <button class="btn-logout" id="btn-logout">Đăng xuất</button>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-messages">
+    {% for category, message in messages %}
+    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <div class="upload-section">
+    <div class="section-head">
+      <div>
+        <h2>Tải lên file CSV</h2>
+        <p class="section-description">Chọn file CSV để tải lên, sau đó import dữ liệu vào hệ thống.</p>
+      </div>
+      <a href="/tasks/import/download-sample" class="btn-add-task btn-download-sample">Download Sample</a>
+    </div>
+
+    <form action="/tasks/upload" method="post" enctype="multipart/form-data" class="upload-form">
+      <label class="file-input-label">
+        <input type="file" name="file" accept=".csv" required>
+        <span>Chọn file CSV</span>
+      </label>
+      <button type="submit" class="btn-add-task">Upload file</button>
+    </form>
+
+    <div class="uploaded-files">
+      <!-- Filter Buttons -->
+      <div class="filter-section">
+        <div class="filter-buttons">
+          <button class="filter-btn {% if current_filter == 'all' %}active{% endif %}" data-filter="all"
+            onclick="filterTasks('all')">Toàn
+            bộ</button>
+          <button class="filter-btn {% if current_filter == 'pending' %}active{% endif %}" data-filter="pending"
+            onclick="filterTasks('pending')">Chưa
+            import</button>
+          <button class="filter-btn {% if current_filter == 'imported' %}active{% endif %}" data-filter="imported"
+            onclick="filterTasks('imported')">Đã
+            import</button>
+        </div>
+      </div>
+      {% if files %}
+      <div class="file-table-wrap">
+        <table class="file-table">
+          <thead>
+            <tr>
+              <th>Tên file</th>
+              <th>Thời gian tải lên</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for file in files %}
+            <tr>
+              <td>{{ file.filename }}</td>
+              <td>{{ file.uploaded_at.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td>
+                <span class="status-badge {% if file.is_imported %}imported{% else %}pending{% endif %}">
+                  {{ 'Imported' if file.is_imported else 'Pending' }}
+                </span>
+              </td>
+              <td>
+                <button class="btn-import-task" data-file-id="{{ file.id }}" onclick="importFile(`{{ file.id }}`)" {% if
+                  file.is_imported %}disabled{% endif %}>
+                  {{ 'Imported' if file.is_imported else 'Import' }}
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="no-files">Chưa có file nào được tải lên.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Auto-close Alert -->
+  <div id="auto-alert" class="auto-alert">
+    <span id="auto-alert-message">Thao tác thành công!</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/tasks_import.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+{% endblock %}
