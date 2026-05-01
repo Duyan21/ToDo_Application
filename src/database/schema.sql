@@ -73,6 +73,8 @@ CREATE TABLE Files (
     id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT NOT NULL,
     filename NVARCHAR(255) NOT NULL,
+    file_path NVARCHAR(500) NOT NULL,
+    is_imported BIT DEFAULT 0,
     uploaded_at DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );

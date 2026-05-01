@@ -34,6 +34,8 @@ class File(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    is_imported = db.Column(db.Boolean, default=False)
     uploaded_at = db.Column(db.DateTime, default=datetime.now)
 
 class Notification(db.Model):

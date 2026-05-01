@@ -1,13 +1,24 @@
-from flask import Blueprint, request, jsonify, session, render_template
-from src.database.models import db, Task, Notification
+import csv
+from importlib.resources import files
+
+from flask import Blueprint, request, jsonify, session, render_template, send_file, redirect, flash
+from src.database.models import db, Task, Notification, File
 from datetime import datetime, timezone
 from src.dto.task_dto import TaskDTO, TaskCreateDTO, TaskUpdateDTO
+from werkzeug.utils import secure_filename
+import os
 
 from src.utils.decorators.require_auth import require_auth
 from src.utils.decorators.validate_input import validate_input
 from src.utils.decorators.check_execution_time import check_execution_time
+from src.utils.generators.read_csv import read_tasks_from_csv
 
 task_bp = Blueprint('task', __name__, url_prefix='')
+
+ALLOWED_EXTENSIONS = {'csv'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @task_bp.route('/tasks', methods=['GET'])
 @require_auth 
@@ -157,3 +168,122 @@ def delete_task(task_id):
     db.session.delete(task)
     db.session.commit()
     return jsonify({"message": "Xóa task thành công!"}), 200
+
+@task_bp.route('/tasks/import', methods=['GET'])
+@require_auth 
+@check_execution_time 
+def import_list():
+    user_id = session.get('user_id')
+    filter_type = request.args.get('filter', 'all')
+
+    query = File.query.filter_by(user_id=user_id)
+    if filter_type == 'pending':
+        query = query.filter(File.is_imported == False)
+    elif filter_type == 'imported':
+        query = query.filter(File.is_imported == True)
+
+    files = query.all()
+    return render_template('tasks_import.html', current_filter=filter_type, files=files)
+
+@task_bp.route('/tasks/import/download-sample', methods=['GET'])
+@require_auth 
+@check_execution_time 
+def download_sample():
+    sample_file = os.path.join(os.path.dirname(__file__), '..', 'static', 'sample', 'sample.csv')
+    sample_file = os.path.abspath(sample_file)
+    if not os.path.exists(sample_file):
+        return jsonify({"error": "Sample file not found."}), 404
+
+    return send_file(
+        sample_file,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='sample_tasks.csv'
+    )
+
+@task_bp.route('/tasks/upload', methods=['POST'])
+@require_auth 
+@check_execution_time 
+def upload_file():
+    user_id = session.get('user_id')
+    if 'file' not in request.files:
+        flash('Vui lòng chọn file CSV để tải lên.', 'error')
+        return redirect('/tasks/import')
+
+    uploaded_file = request.files['file']
+    if uploaded_file.filename == '':
+        flash('Vui lòng chọn file CSV để tải lên.', 'error')
+        return redirect('/tasks/import')
+
+    if not allowed_file(uploaded_file.filename):
+        flash('Chỉ hỗ trợ file CSV.', 'error')
+        return redirect('/tasks/import')
+
+    workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    upload_folder = os.path.join(workspace_root, 'upload')
+    os.makedirs(upload_folder, exist_ok=True)
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = secure_filename(uploaded_file.filename)
+    saved_filename = f"{timestamp}_{filename}"
+    save_path = os.path.join(upload_folder, saved_filename)
+    uploaded_file.save(save_path)
+
+    file_record = File(
+        user_id=user_id,
+        filename=filename,
+        file_path=os.path.relpath(save_path, workspace_root),
+        is_imported=False
+    )
+    db.session.add(file_record)
+    db.session.commit()
+
+    flash(f'Tải lên file thành công: {filename}', 'success')
+    return redirect('/tasks/import')
+
+@task_bp.route('/tasks/import-run/<int:file_id>', methods=['POST'])
+@require_auth 
+@check_execution_time 
+def import_run(file_id):
+    # read file record, if status is pending, read file and import tasks, update status to imported
+    user_id = session.get('user_id')
+    file_record = File.query.filter_by(id=file_id, user_id=user_id).first()
+    if not file_record:
+        return jsonify({"error": "Không tìm thấy file."}), 404
+    if file_record.is_imported:
+        return jsonify({"error": "File đã được nhập trước đó."}), 400
+    file_path = os.path.join(os.path.dirname(__file__), '..', '..', file_record.file_path)
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File không tồn tại trên server."}), 404
+    # read file and import tasks
+    try:
+        for parts in read_tasks_from_csv(file_path):
+            if len(parts) < 1:
+                continue
+
+            title = parts[0].strip()
+            description = parts[1].strip() if len(parts) > 1 else ''
+            deadline_str = parts[2].strip() if len(parts) > 2 else ''
+            deadline = datetime.strptime(deadline_str, '%Y-%m-%d %H:%M:%S') if deadline_str else None
+            priority = parts[3].strip() if len(parts) > 3 else 'medium'
+            reminder_minutes = int(parts[4]) if len(parts) > 4 and parts[4].isdigit() else 0
+
+            new_task = Task(
+                user_id=user_id,
+                title=title,
+                description=description,
+                deadline=deadline,
+                priority=priority,
+                status='pending',
+                reminder_minutes=reminder_minutes
+            )
+            db.session.add(new_task)
+
+        db.session.commit()
+
+        file_record.is_imported = True
+        db.session.commit()
+
+        return jsonify({"message": "Nhập tasks thành công!"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Lỗi khi nhập tasks: {str(e)}"}), 500

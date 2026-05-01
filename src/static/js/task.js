@@ -169,4 +169,9 @@ $(document).ready(function () {
     });
   });
 
+  // khi click vào thì sẽ chuyển qua trang import task /tasks/import
+  $("#btn-import-task").click(function (e) {
+    window.location.href = "/tasks/import";
+    e.preventDefault();
+  });
 });
