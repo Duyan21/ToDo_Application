@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from src.database.models import db, Task, Notification
+from src.database.models import db, Task, Notification, NotificationType
 
 class NotificationService:
     @staticmethod
@@ -38,7 +38,7 @@ class NotificationService:
             existing = Notification.query.filter_by(
                 task_id=task.id,
                 user_id=user_id,
-                type='OVERDUE'
+                type=NotificationType.OVERDUE
             ).first()
             
             if not existing:
@@ -48,7 +48,7 @@ class NotificationService:
                 notification = Notification(
                     task_id=task.id,
                     user_id=user_id,
-                    type='OVERDUE',
+                    type=NotificationType.OVERDUE,
                     message=message,
                     notify_time=datetime.now()
                 )
@@ -71,7 +71,7 @@ class NotificationService:
                 existing = Notification.query.filter_by(
                     task_id=task.id,
                     user_id=user_id,
-                    type='REMINDER'
+                    type=NotificationType.REMINDER
                 ).first()
                 
                 if not existing:
@@ -80,7 +80,7 @@ class NotificationService:
                     notification = Notification(
                         task_id=task.id,
                         user_id=user_id,
-                        type='REMINDER',
+                        type=NotificationType.REMINDER,
                         message=message,
                         notify_time=datetime.now()
                     )
@@ -139,7 +139,7 @@ class NotificationService:
                 existing = existing_notifications.get(task.id)
                 
                 # Remove any existing reminder
-                if existing and existing.type == 'REMINDER':
+                if existing and existing.type == NotificationType.REMINDER:
                     db.session.delete(existing)
                     synced_count += 1
                     existing = None
@@ -150,7 +150,7 @@ class NotificationService:
                     notification = Notification(
                         task_id=task.id,
                         user_id=user_id,
-                        type='OVERDUE',
+                        type=NotificationType.OVERDUE,
                         message=f'Task "{task.title}" đã quá hạn {days_overdue} ngày',
                         notify_time=datetime.now()
                     )
@@ -162,7 +162,7 @@ class NotificationService:
                 existing = existing_notifications.get(task.id)
                 
                 # Remove any existing overdue
-                if existing and existing.type == 'OVERDUE':
+                if existing and existing.type == NotificationType.OVERDUE:
                     db.session.delete(existing)
                     synced_count += 1
                     existing = None
@@ -172,7 +172,7 @@ class NotificationService:
                     notification = Notification(
                         task_id=task.id,
                         user_id=user_id,
-                        type='REMINDER',
+                        type=NotificationType.REMINDER,
                         message=f'Task "{task.title}" sắp đến hạn trong {task.reminder_minutes} phút',
                         notify_time=datetime.now()
                     )

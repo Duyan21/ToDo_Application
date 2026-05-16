@@ -1,7 +1,30 @@
+import enum
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 db = SQLAlchemy()
+
+class Priority(enum.Enum):
+    low = 'low'
+    medium = 'medium'
+    high = 'high'
+
+    def __str__(self):
+        return self.value
+
+class TaskStatus(enum.Enum):
+    pending = 'pending'
+    completed = 'completed'
+
+    def __str__(self):
+        return self.value
+
+class NotificationType(enum.Enum):
+    REMINDER = 'REMINDER'
+    OVERDUE = 'OVERDUE'
+
+    def __str__(self):
+        return self.value
 
 class User(db.Model):
     __tablename__ = 'Users'
@@ -18,13 +41,13 @@ class User(db.Model):
 class Task(db.Model):
     __tablename__ = 'Tasks'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False, index=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    is_done = db.Column(db.Boolean, default=False)
-    deadline = db.Column(db.DateTime, nullable=True)
-    priority = db.Column(db.String(20), default='medium')
-    status = db.Column(db.String(20), default='pending')
+    is_done = db.Column(db.Boolean, default=False, index=True)
+    deadline = db.Column(db.DateTime, nullable=True, index=True)
+    priority = db.Column(db.Enum(Priority), default=Priority.medium)
+    status = db.Column(db.Enum(TaskStatus), default=TaskStatus.pending)
     reminder_minutes = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.now)
     
@@ -41,11 +64,11 @@ class File(db.Model):
 class Notification(db.Model):
     __tablename__ = 'Notifications'
     id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Integer, db.ForeignKey('Tasks.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'))
-    type = db.Column(db.String(50))  # REMINDER, OVERDUE
+    task_id = db.Column(db.Integer, db.ForeignKey('Tasks.id', ondelete='CASCADE'), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), index=True)
+    type = db.Column(db.Enum(NotificationType))
     message = db.Column(db.Unicode(200))
     notify_time = db.Column(db.DateTime)
     sent = db.Column(db.Boolean, default=False)
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)

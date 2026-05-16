@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, session
 from datetime import datetime, timedelta
 from src.dto.notification_dto import NotificationDTO
 from src.utils.decorators.require_auth import require_auth
-from src.database.models import db, Task, Notification
+from src.database.models import db, Task, Notification, NotificationType
 
 noti_bp = Blueprint('noti', __name__, template_folder='../../templates')
 
@@ -16,8 +16,8 @@ def get_notifications():
     notifications = Notification.query.filter_by(user_id=user_id).order_by(
         # Overdue first, then by created_at desc
         db.case(
-            (Notification.type == 'OVERDUE', 1),
-            (Notification.type == 'REMINDER', 2),
+            (Notification.type == NotificationType.OVERDUE, 1),
+            (Notification.type == NotificationType.REMINDER, 2),
             else_=3
         ).asc(),
         Notification.created_at.desc()

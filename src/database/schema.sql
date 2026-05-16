@@ -82,6 +82,7 @@ GO
 
 -- Create indexes for better performance
 CREATE INDEX idx_tasks_user_id ON Tasks(user_id);
+CREATE INDEX idx_tasks_is_done ON Tasks(is_done);
 CREATE INDEX idx_tasks_deadline ON Tasks(deadline);
 CREATE INDEX idx_tasks_status ON Tasks(status);
 CREATE INDEX idx_notifications_user_id ON Notifications(user_id);

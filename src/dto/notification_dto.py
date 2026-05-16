@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+from src.database.models import NotificationType
 
 @dataclass
 class NotificationDTO:
@@ -22,7 +23,7 @@ class NotificationDTO:
             id=notification_model.id,
             task_id=notification_model.task_id,
             user_id=notification_model.user_id,
-            type=notification_model.type,
+            type=notification_model.type.value if isinstance(notification_model.type, NotificationType) else notification_model.type,
             message=notification_model.message,
             notify_time=notification_model.notify_time,
             sent=notification_model.sent,

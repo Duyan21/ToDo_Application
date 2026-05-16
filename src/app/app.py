@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from flask import Flask
 import urllib
+from dotenv import load_dotenv
 from src.routes.auth import auth_bp
 from src.routes.home import home_bp
 from src.routes.task import task_bp

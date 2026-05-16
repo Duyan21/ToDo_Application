@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+from src.database.models import Priority, TaskStatus
 
 @dataclass
 class TaskDTO:
@@ -24,8 +25,8 @@ class TaskDTO:
             title=task_model.title,
             description=task_model.description,
             deadline=task_model.deadline,
-            priority=task_model.priority,
-            status=task_model.status,
+            priority=task_model.priority.value if isinstance(task_model.priority, Priority) else task_model.priority,
+            status=task_model.status.value if isinstance(task_model.status, TaskStatus) else task_model.status,
             reminder_minutes=task_model.reminder_minutes,
             is_done=task_model.is_done,
             user_id=task_model.user_id,
