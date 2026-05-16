@@ -18,11 +18,11 @@ class User(db.Model):
 class Task(db.Model):
     __tablename__ = 'Tasks'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False, index=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    is_done = db.Column(db.Boolean, default=False)
-    deadline = db.Column(db.DateTime, nullable=True)
+    is_done = db.Column(db.Boolean, default=False, index=True)
+    deadline = db.Column(db.DateTime, nullable=True, index=True)
     priority = db.Column(db.String(20), default='medium')
     status = db.Column(db.String(20), default='pending')
     reminder_minutes = db.Column(db.Integer, default=0)
@@ -41,8 +41,8 @@ class File(db.Model):
 class Notification(db.Model):
     __tablename__ = 'Notifications'
     id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Integer, db.ForeignKey('Tasks.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'))
+    task_id = db.Column(db.Integer, db.ForeignKey('Tasks.id'), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), index=True)
     type = db.Column(db.String(50))  # REMINDER, OVERDUE
     message = db.Column(db.Unicode(200))
     notify_time = db.Column(db.DateTime)
