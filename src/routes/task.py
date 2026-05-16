@@ -2,7 +2,7 @@ import csv
 from importlib.resources import files
 
 from flask import Blueprint, request, jsonify, session, render_template, send_file, redirect, flash
-from src.database.models import db, Task, Notification, File
+from src.database.models import db, Task, Notification, File, Priority, TaskStatus
 from datetime import datetime, timezone
 from src.dto.task_dto import TaskDTO, TaskCreateDTO, TaskUpdateDTO
 from werkzeug.utils import secure_filename
@@ -32,7 +32,7 @@ def get_tasks():
     if filter_type == 'completed':
         query = query.filter_by(is_done=True)
     elif filter_type == 'pending':
-        query = query.filter_by(is_done=False, status='pending')
+        query = query.filter_by(is_done=False, status=TaskStatus.pending)
     elif filter_type == 'overdue':
         query = query.filter(Task.is_done == False, Task.deadline < datetime.now())
     
@@ -65,8 +65,8 @@ def create_task():
         title=task_create_dto.title,
         description=task_create_dto.description,
         deadline=datetime.strptime(task_create_dto.deadline, '%Y-%m-%dT%H:%M') if task_create_dto.deadline else None,
-        priority=task_create_dto.priority,
-        status='pending',
+        priority=Priority(task_create_dto.priority),
+        status=TaskStatus.pending,
         reminder_minutes=task_create_dto.reminder_minutes
     )
     db.session.add(new_task)
@@ -129,7 +129,7 @@ def complete_task(task_id):
         return jsonify({"error": "Không tìm thấy task"}), 404
 
     task.is_done = True
-    task.status = 'completed'
+    task.status = TaskStatus.completed
     db.session.commit()
     print(f"[{datetime.now()}] Task {task_id} completed. Background job will clean notifications in 3 seconds.")
     
@@ -148,9 +148,9 @@ def uncomplete_task(task_id):
         return jsonify({"error": "Không tìm thấy task"}), 404
 
     task.is_done = False
-    task.status = 'pending'
+    task.status = TaskStatus.pending
     db.session.commit()
-    
+
     task_dto = TaskDTO.from_model(task)
     return jsonify({
         "message": "Chuyển task sang đang làm!",
@@ -265,7 +265,11 @@ def import_run(file_id):
             description = parts[1].strip() if len(parts) > 1 else ''
             deadline_str = parts[2].strip() if len(parts) > 2 else ''
             deadline = datetime.strptime(deadline_str, '%Y-%m-%d %H:%M:%S') if deadline_str else None
-            priority = parts[3].strip() if len(parts) > 3 else 'medium'
+            priority_str = parts[3].strip() if len(parts) > 3 else 'medium'
+            try:
+                priority = Priority(priority_str)
+            except ValueError:
+                priority = Priority.medium
             reminder_minutes = int(parts[4]) if len(parts) > 4 and parts[4].isdigit() else 0
 
             new_task = Task(
@@ -274,7 +278,7 @@ def import_run(file_id):
                 description=description,
                 deadline=deadline,
                 priority=priority,
-                status='pending',
+                status=TaskStatus.pending,
                 reminder_minutes=reminder_minutes
             )
             db.session.add(new_task)
