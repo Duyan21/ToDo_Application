@@ -6,18 +6,18 @@ class NotificationService:
     def check_and_create_notifications():
         """Sync notifications with current task status using real-time joins"""
         try:
-            # Get all users with tasks in one query
             users_with_tasks = db.session.query(Task.user_id).distinct().all()
-            
+
             if not users_with_tasks:
                 return
-                
+
+            now = datetime.now()
             for user_tuple in users_with_tasks:
                 user_id = user_tuple[0]
-                NotificationService._sync_notifications_for_user(user_id)
-            
+                NotificationService._sync_notifications_for_user(user_id, now)
+
             db.session.commit()
-            
+
         except Exception as e:
             db.session.rollback()
     
@@ -90,7 +90,7 @@ class NotificationService:
         return created_count
     
     @staticmethod
-    def _sync_notifications_for_user(user_id):
+    def _sync_notifications_for_user(user_id, now):
         """Sync notifications with current task status using optimized queries"""
         synced_count = 0
         
@@ -128,10 +128,10 @@ class NotificationService:
             if task.is_done:
                 continue
                 
-            is_overdue = task.deadline and task.deadline < datetime.now()
-            should_remind = (not is_overdue and task.deadline and 
-                           task.reminder_minutes > 0 and 
-                           (task.deadline - timedelta(minutes=task.reminder_minutes)) <= datetime.now())
+            is_overdue = task.deadline and task.deadline < now
+            should_remind = (not is_overdue and task.deadline and
+                           task.reminder_minutes > 0 and
+                           (task.deadline - timedelta(minutes=task.reminder_minutes)) <= now)
             
             # Determine what notification should exist
             if is_overdue:
@@ -146,13 +146,13 @@ class NotificationService:
                 
                 # Create or update overdue
                 if not existing:
-                    days_overdue = (datetime.now() - task.deadline).days
+                    days_overdue = (now - task.deadline).days
                     notification = Notification(
                         task_id=task.id,
                         user_id=user_id,
                         type=NotificationType.OVERDUE,
                         message=f'Task "{task.title}" đã quá hạn {days_overdue} ngày',
-                        notify_time=datetime.now()
+                        notify_time=now
                     )
                     db.session.add(notification)
                     synced_count += 1
@@ -174,7 +174,7 @@ class NotificationService:
                         user_id=user_id,
                         type=NotificationType.REMINDER,
                         message=f'Task "{task.title}" sắp đến hạn trong {task.reminder_minutes} phút',
-                        notify_time=datetime.now()
+                        notify_time=now
                     )
                     db.session.add(notification)
                     synced_count += 1
