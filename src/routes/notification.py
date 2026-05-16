@@ -47,7 +47,7 @@ def mark_notification_as_read(notification_id):
     notification.is_read = True
     db.session.commit()
     
-    return jsonify({"message": "Đã xóa notification"}), 200
+    return jsonify({"message": "Đã đánh dấu đã đọc"}), 200
 
 
 # Mark all notifications as read
