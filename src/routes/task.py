@@ -1,12 +1,14 @@
 import csv
-from importlib.resources import files
+import logging
+import os
 
 from flask import Blueprint, request, jsonify, session, render_template, send_file, redirect, flash
 from src.database.models import db, Task, Notification, File, Priority, TaskStatus
-from datetime import datetime, timezone
+from datetime import datetime
 from src.dto.task_dto import TaskDTO, TaskCreateDTO, TaskUpdateDTO
 from werkzeug.utils import secure_filename
-import os
+
+logger = logging.getLogger(__name__)
 
 from src.utils.decorators.require_auth import require_auth
 from src.utils.decorators.validate_input import validate_input
@@ -64,7 +66,7 @@ def create_task():
         user_id=user_id,
         title=task_create_dto.title,
         description=task_create_dto.description,
-        deadline=datetime.strptime(task_create_dto.deadline, '%Y-%m-%dT%H:%M') if task_create_dto.deadline else None,
+        deadline=task_create_dto.deadline,
         priority=Priority(task_create_dto.priority),
         status=TaskStatus.pending,
         reminder_minutes=task_create_dto.reminder_minutes
@@ -111,7 +113,7 @@ def edit_task(task_id):
         task.deadline = datetime.strptime(task_update_dto.deadline, '%Y-%m-%dT%H:%M')
     
     db.session.commit()
-    print(f"[{datetime.now()}] Task {task_id} updated. Background job will sync notifications in 3 seconds.")
+    logger.info("Task %s updated.", task_id)
     
     # Return TaskDTO response
     task_dto = TaskDTO.from_model(task)
@@ -131,7 +133,7 @@ def complete_task(task_id):
     task.is_done = True
     task.status = TaskStatus.completed
     db.session.commit()
-    print(f"[{datetime.now()}] Task {task_id} completed. Background job will clean notifications in 3 seconds.")
+    logger.info("Task %s completed.", task_id)
     
     task_dto = TaskDTO.from_model(task)
     return jsonify({
@@ -282,8 +284,6 @@ def import_run(file_id):
                 reminder_minutes=reminder_minutes
             )
             db.session.add(new_task)
-
-        db.session.commit()
 
         file_record.is_imported = True
         db.session.commit()
