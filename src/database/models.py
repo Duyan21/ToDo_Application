@@ -48,4 +48,4 @@ class Notification(db.Model):
     notify_time = db.Column(db.DateTime)
     sent = db.Column(db.Boolean, default=False)
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)
