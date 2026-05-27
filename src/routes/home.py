@@ -9,4 +9,7 @@ def home():
     if not user_id:
         return redirect(url_for('auth.signin_page'))
     user = User.query.get(user_id)
+    if user is None:
+        session.clear()
+        return redirect(url_for('auth.signin_page'))
     return render_template('home.html', user_name=user.name)

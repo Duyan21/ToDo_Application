@@ -1,6 +1,14 @@
 {% extends "index.html" %}
 
-{% block title %}Tickly{% endblock %}
+{% block title %}ToDo{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper">
@@ -10,84 +18,81 @@
     </svg>
   </div>
   <div class="brand-title">ToDo Application</div>
-  <div class="brand-subtitle">Tasks, focused. Days, organized.</div>
+  <div class="brand-subtitle">Quản lý công việc. Tổ chức từng ngày.</div>
 
   <div class="auth-card">
     <div class="tab-switcher">
-      <button class="tab-btn active" id="tab-signin" onclick="switchTab('signin')">Sign in</button>
-      <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Create account</button>
+      <button class="tab-btn active" id="tab-signin" onclick="switchTab('signin')">Đăng nhập</button>
+      <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Tạo tài khoản</button>
     </div>
 
     <!-- Sign In Form -->
     <form id="login-form">
       <div class="input-wrap">
         <label class="field-label">Email</label>
-        <div style="position:relative">
+        <div class="input-body">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <input type="email" id="login-email" class="form-input" placeholder="Enter your email">
+          <input type="email" id="login-email" class="form-input" placeholder="Nhập email của bạn">
         </div>
+        <div class="field-error" id="login-email-error"></div>
       </div>
       <div class="input-wrap">
-        <div class="password-row">
-          <label class="field-label" style="margin-bottom:0">Password</label>
-          <a href="#" class="forgot-link">Forgot?</a>
-        </div>
-        <div style="position:relative">
+        <label class="field-label">Mật khẩu</label>
+        <div class="input-body">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="login-password" class="form-input" placeholder="Enter your password">
+          <input type="password" id="login-password" class="form-input" placeholder="Nhập mật khẩu">
         </div>
+        <div class="field-error" id="login-password-error"></div>
       </div>
-      <button type="submit" class="btn-auth">Login &rarr;</button>
+      <div id="login-error" class="form-error" style="display:none"></div>
+      <button type="submit" class="btn-auth">Đăng nhập &rarr;</button>
     </form>
 
     <!-- Register Form -->
     <form id="register-form" style="display:none">
       <div class="input-wrap">
-        <label class="field-label">Full name</label>
-        <div style="position:relative">
+        <label class="field-label">Họ và tên</label>
+        <div class="input-body">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <input type="text" id="reg-name" class="form-input" placeholder="Enter your full name">
+          <input type="text" id="reg-name" class="form-input" placeholder="Nhập họ và tên">
         </div>
+        <div class="field-error" id="reg-name-error"></div>
       </div>
       <div class="input-wrap">
         <label class="field-label">Email</label>
-        <div style="position:relative">
+        <div class="input-body">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <input type="email" id="reg-email" class="form-input" placeholder="Enter your email">
+          <input type="email" id="reg-email" class="form-input" placeholder="Nhập email của bạn">
         </div>
+        <div class="field-error" id="reg-email-error"></div>
       </div>
       <div class="input-wrap">
-        <label class="field-label">Password</label>
-        <div style="position:relative">
+        <label class="field-label">Mật khẩu</label>
+        <div class="input-body">
           <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="reg-password" class="form-input" placeholder="Enter your password">
+          <input type="password" id="reg-password" class="form-input" placeholder="Nhập mật khẩu">
         </div>
-        <div class="field-hint">At least 8 characters.</div>
+        <div class="field-hint">Tối thiểu 8 ký tự.</div>
+        <div class="field-error" id="reg-password-error"></div>
       </div>
-      <button type="submit" class="btn-auth">Register &rarr;</button>
+      <div class="input-wrap">
+        <label class="field-label">Xác nhận mật khẩu</label>
+        <div class="input-body">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input type="password" id="reg-confirm-password" class="form-input" placeholder="Nhập lại mật khẩu">
+        </div>
+        <div class="field-error" id="reg-confirm-password-error"></div>
+      </div>
+      <div id="register-error" class="form-error" style="display:none"></div>
+      <button type="submit" class="btn-auth">Đăng ký &rarr;</button>
     </form>
 
     <div class="auth-footer" id="footer-signin">
-      New to ToDo? <a href="#" onclick="switchTab('register');return false;">Create an account</a>
+      Chưa có tài khoản? <a href="#" onclick="switchTab('register');return false;">Tạo tài khoản</a>
     </div>
     <div class="auth-footer" id="footer-register" style="display:none">
-      Already have an account? <a href="#" onclick="switchTab('signin');return false;">Sign in instead</a>
+      Đã có tài khoản? <a href="#" onclick="switchTab('signin');return false;">Đăng nhập ngay</a>
     </div>
   </div>
 </div>
-
-<script>
-function switchTab(tab) {
-  var isSignin = tab === 'signin';
-  document.getElementById('login-form').style.display = isSignin ? '' : 'none';
-  document.getElementById('register-form').style.display = isSignin ? 'none' : '';
-  document.getElementById('footer-signin').style.display = isSignin ? '' : 'none';
-  document.getElementById('footer-register').style.display = isSignin ? 'none' : '';
-  document.getElementById('tab-signin').classList.toggle('active', isSignin);
-  document.getElementById('tab-register').classList.toggle('active', !isSignin);
-}
-if (new URLSearchParams(window.location.search).get('tab') === 'register') {
-  switchTab('register');
-}
-</script>
 {% endblock %}

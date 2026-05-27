@@ -1,6 +1,6 @@
 {% extends "index.html" %}
 
-{% block title %}ToDo — Home{% endblock %}
+{% block title %}ToDo — Trang chủ{% endblock %}
 
 {% block content %}
 <div class="home-wrapper">
@@ -21,7 +21,7 @@
           <polyline points="16 17 21 12 16 7"/>
           <line x1="21" y1="12" x2="9" y2="12"/>
         </svg>
-        Logout
+        Đăng xuất
       </button>
     </div>
   </header>
@@ -34,21 +34,21 @@
           <polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
       </div>
-      <h1 class="welcome-title">Welcome back, {{ user_name }}</h1>
-      <p class="welcome-sub">You're signed in to ToDo. Your tasks and focus tools will live here.</p>
+      <h1 class="welcome-title">Chào mừng trở lại, {{ user_name }}</h1>
+      <p class="welcome-sub">Bạn đã đăng nhập vào ToDo. Các công việc và công cụ của bạn sẽ ở đây.</p>
     </div>
 
     <div class="feature-card">
       <div class="feature-left">
-        <span class="new-badge">✦ New in ToDo</span>
-        <h2 class="feature-heading">Turn your day into done.</h2>
-        <p class="feature-sub">Capture tasks in seconds, organize with smart lists, and stay on track with gentle reminders — all in one calm space.</p>
+        <span class="new-badge">✦ Mới trong ToDo</span>
+        <h2 class="feature-heading">Hoàn thành ngày của bạn.</h2>
+        <p class="feature-sub">Thêm công việc trong vài giây, sắp xếp với danh sách thông minh và theo dõi với nhắc nhở nhẹ nhàng</p>
         <a href="/tasks" class="create-btn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          Create your first task
+          Tạo công việc đầu tiên
         </a>
       </div>
       <div class="feature-right">
@@ -60,8 +60,8 @@
             </svg>
           </div>
           <div>
-            <div class="feature-item-title">Smart lists</div>
-            <div class="feature-item-sub">Group tasks by project, priority, or day.</div>
+            <div class="feature-item-title">Danh sách thông minh</div>
+            <div class="feature-item-sub">Nhóm công việc theo độ ưu tiên hoặc ngày.</div>
           </div>
         </div>
         <div class="feature-item">
@@ -72,8 +72,8 @@
             </svg>
           </div>
           <div>
-            <div class="feature-item-title">Gentle reminders</div>
-            <div class="feature-item-sub">Stay on top without the noise.</div>
+            <div class="feature-item-title">Nhắc nhở nhẹ nhàng</div>
+            <div class="feature-item-sub">Luôn theo dõi mà không bị phân tâm.</div>
           </div>
         </div>
         <div class="feature-item">
@@ -83,8 +83,8 @@
             </svg>
           </div>
           <div>
-            <div class="feature-item-title">Lightning quick</div>
-            <div class="feature-item-sub">Add tasks in a single keystroke.</div>
+            <div class="feature-item-title">Nhanh như chớp</div>
+            <div class="feature-item-sub">Thêm công việc chỉ với một lần nhấn.</div>
           </div>
         </div>
       </div>

@@ -1,55 +1,53 @@
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Optional
+from __future__ import annotations
 
-@dataclass
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.database.models import User
+
+
+@dataclass(frozen=True)
 class UserDTO:
-    """Data Transfer Object for User model"""
-    id: Optional[int] = None
-    username: str = ""
-    email: str = ""
-    password_hash: Optional[str] = None
-    created_at: Optional[datetime] = None
-    is_active: bool = True
+    id: int
+    name: str
+    email: str
+    created_at: datetime | None
 
     @classmethod
-    def from_model(cls, user_model):
-        """Create DTO from database model"""
+    def from_model(cls, user: User) -> UserDTO:
         return cls(
-            id=user_model.id,
-            username=user_model.username,
-            email=user_model.email,
-            password_hash=user_model.password_hash,
-            created_at=user_model.created_at,
-            is_active=user_model.is_active
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            created_at=user.created_at,
         )
 
-    def to_dict(self):
-        """Convert DTO to dictionary (excluding sensitive data)"""
-        return {
-            'id': self.id,
-            'username': self.username,
-            'email': self.email,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'is_active': self.is_active
-        }
+    def __str__(self) -> str:
+        return f"{self.name} <{self.email}>"
+
+    def to_dict(self) -> dict:
+        d = asdict(self)
+        d["created_at"] = self.created_at.isoformat() if self.created_at else None
+        return d
+
 
 @dataclass
-class UserCreateDTO:
-    """DTO for creating new users"""
-    username: str
+class UserRegisterDTO:
+    name: str
     email: str
-    password: str
+    password: str = field(repr=False)
+
+    def __post_init__(self) -> None:
+        self.name = self.name.strip()
+        self.email = self.email.strip().lower()
+
 
 @dataclass
 class UserLoginDTO:
-    """DTO for user login"""
-    username: str
-    password: str
+    email: str
+    password: str = field(repr=False)
 
-@dataclass
-class UserUpdateDTO:
-    """DTO for updating user profile"""
-    username: Optional[str] = None
-    email: Optional[str] = None
-    password: Optional[str] = None
+    def __post_init__(self) -> None:
+        self.email = self.email.strip().lower()
