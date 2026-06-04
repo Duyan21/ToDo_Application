@@ -1,21 +1,15 @@
 import logging
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
-
-from src.database.models import User, db
+from src.common.errors import (
+    AuthError,
+    EmailAlreadyExistsError,
+    InvalidCredentialsError,
+)
+from src.repositories import get_user_repository
 from src.dto.user_dto import UserDTO, UserLoginDTO, UserRegisterDTO
 
 logger = logging.getLogger(__name__)
-
-
-class AuthError(Exception):
-    pass
-
-class EmailAlreadyExistsError(AuthError):
-    pass
-
-class InvalidCredentialsError(AuthError):
-    pass
 
 
 class AuthService:
@@ -24,25 +18,26 @@ class AuthService:
     def register(dto: UserRegisterDTO) -> UserDTO:
         if not dto.name:
             raise AuthError("Tên không được để trống")
-
-        user = User(
-            name=dto.name,
-            email=dto.email,
-            password_hash=generate_password_hash(dto.password),
-        )
-        db.session.add(user)
+        user_repository = get_user_repository()
         try:
-            db.session.commit()
+            user = user_repository.create(
+                name=dto.name,
+                email=dto.email,
+                password_hash=generate_password_hash(dto.password),
+            )
         except IntegrityError:
-            db.session.rollback()
             raise EmailAlreadyExistsError("Email đã tồn tại")
+        except Exception as e:
+            logger.error("Error during registration: %s", str(e))
+            raise AuthError("Đăng ký thất bại, vui lòng thử lại sau")
 
         logger.info("New user registered: %s", dto.email)
         return UserDTO.from_model(user)
 
     @staticmethod
     def signin(dto: UserLoginDTO) -> UserDTO:
-        user = User.query.filter_by(email=dto.email).first()
+        user_repository = get_user_repository()
+        user = user_repository.get_by_email(dto.email)
         if not user or not check_password_hash(user.password_hash, dto.password):
             logger.warning("Failed signin attempt for email: %s", dto.email)
             raise InvalidCredentialsError("Email hoặc mật khẩu không đúng")

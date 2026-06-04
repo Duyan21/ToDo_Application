@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for
-
 from src.dto.user_dto import UserLoginDTO, UserRegisterDTO
 from src.services.auth_service import AuthError, EmailAlreadyExistsError, InvalidCredentialsError, AuthService
 from src.utils.decorators.require_auth import require_auth

@@ -3,3 +3,4 @@
 instance/
 upload/
 .env
+venv/
