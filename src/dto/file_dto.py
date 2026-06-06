@@ -8,9 +8,10 @@ class FileDTO:
     """Data Transfer Object for File model"""
     id: Optional[int] = None
     user_id: Optional[int] = None
-    file_type: str = ""  # JSON, CSV
-    created_at: Optional[datetime] = None
-    path: str = ""
+    filename: str = ""
+    file_path: str = ""
+    is_imported: bool = False
+    uploaded_at: Optional[datetime] = None
 
     @classmethod
     def from_model(cls, file_model):
@@ -18,9 +19,10 @@ class FileDTO:
         return cls(
             id=file_model.id,
             user_id=file_model.user_id,
-            file_type=file_model.file_type,
-            created_at=file_model.created_at,
-            path=file_model.path
+            filename=file_model.filename,
+            file_path=file_model.file_path,
+            is_imported=file_model.is_imported,
+            uploaded_at=file_model.uploaded_at,
         )
 
     def to_dict(self):
@@ -28,9 +30,10 @@ class FileDTO:
         return {
             'id': self.id,
             'user_id': self.user_id,
-            'file_type': self.file_type,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'path': self.path
+            'filename': self.filename,
+            'file_path': self.file_path,
+            'is_imported': self.is_imported,
+            'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None,
         }
 
 
@@ -38,12 +41,13 @@ class FileDTO:
 class FileCreateDTO:
     """DTO for creating new file records"""
     user_id: int
-    file_type: str  # JSON, CSV
-    path: str
+    filename: str
+    file_path: str
 
 
 @dataclass
 class FileUpdateDTO:
     """DTO for updating file records"""
-    file_type: Optional[str] = None
-    path: Optional[str] = None
+    filename: Optional[str] = None
+    file_path: Optional[str] = None
+    is_imported: Optional[bool] = None

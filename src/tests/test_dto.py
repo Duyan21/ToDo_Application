@@ -6,6 +6,18 @@ from types import SimpleNamespace
 import pytest
 
 
+def make_file(**kwargs):
+    defaults = dict(
+        id=1, user_id=1,
+        filename="tasks.csv",
+        file_path="upload/tasks.csv",
+        is_imported=False,
+        uploaded_at=datetime(2026, 1, 1, 10, 0),
+    )
+    defaults.update(kwargs)
+    return SimpleNamespace(**defaults)
+
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def make_task(**kwargs):
@@ -158,3 +170,58 @@ class TestNotificationDTO:
     def test_to_dict_is_json_serializable(self):
         from src.dto.notification_dto import NotificationDTO
         json.dumps(NotificationDTO.from_model(make_notification()).to_dict())
+
+
+# ── FileDTO ───────────────────────────────────────────────────────────────────
+
+class TestFileDTO:
+    def test_from_model_maps_filename(self):
+        from src.dto.file_dto import FileDTO
+        dto = FileDTO.from_model(make_file(filename="import.csv"))
+        assert dto.filename == "import.csv"
+
+    def test_from_model_maps_file_path(self):
+        from src.dto.file_dto import FileDTO
+        dto = FileDTO.from_model(make_file(file_path="upload/import.csv"))
+        assert dto.file_path == "upload/import.csv"
+
+    def test_from_model_maps_is_imported(self):
+        from src.dto.file_dto import FileDTO
+        dto = FileDTO.from_model(make_file(is_imported=True))
+        assert dto.is_imported is True
+
+    def test_to_dict_uploaded_at_isoformat(self):
+        from src.dto.file_dto import FileDTO
+        t = datetime(2026, 6, 1, 12, 0)
+        result = FileDTO.from_model(make_file(uploaded_at=t)).to_dict()
+        assert result["uploaded_at"] == t.isoformat()
+
+    def test_to_dict_none_uploaded_at(self):
+        from src.dto.file_dto import FileDTO
+        result = FileDTO.from_model(make_file(uploaded_at=None)).to_dict()
+        assert result["uploaded_at"] is None
+
+    def test_to_dict_is_json_serializable(self):
+        from src.dto.file_dto import FileDTO
+        json.dumps(FileDTO.from_model(make_file()).to_dict())
+
+    def test_to_dict_has_correct_keys(self):
+        from src.dto.file_dto import FileDTO
+        result = FileDTO.from_model(make_file()).to_dict()
+        assert set(result.keys()) == {"id", "user_id", "filename", "file_path", "is_imported", "uploaded_at"}
+
+
+# ── TaskCreateDTO — datetime passthrough (CSV import path) ────────────────────
+
+class TestTaskCreateDTODatetimePassthrough:
+    def test_datetime_object_not_reparsed(self):
+        """CSV import passes deadline as datetime; __post_init__ must not crash."""
+        from src.dto.task_dto import TaskCreateDTO
+        dl = datetime(2026, 12, 31, 9, 0)
+        dto = TaskCreateDTO(title="T", deadline=dl)
+        assert dto.deadline == dl
+
+    def test_string_still_parsed(self):
+        from src.dto.task_dto import TaskCreateDTO
+        dto = TaskCreateDTO(title="T", deadline="2026-12-31T09:00")
+        assert dto.deadline == datetime(2026, 12, 31, 9, 0)
