@@ -13,6 +13,7 @@ from flask import (
 from src.services.task_service import TaskService
 from src.services.file_service import FileService
 from src.dto.task_dto import TaskDTO, TaskCreateDTO, TaskUpdateDTO
+from src.repositories import get_file_repository
 from src.utils.decorators.require_auth import require_auth
 from src.utils.decorators.validate_input import validate_input
 from src.utils.decorators.check_execution_time import check_execution_time
@@ -65,6 +66,8 @@ def create_task():
 def edit_task(task_id):
     user_id = session.get("user_id")
     data = request.get_json()
+    if not data:
+        return jsonify({"error": "Yêu cầu JSON body"}), 400
 
     # Create TaskUpdateDTO from request data
     task_update_dto = TaskUpdateDTO(
@@ -195,8 +198,6 @@ def import_run(file_id):
         os.path.join(os.path.dirname(__file__), "..", "..")
     )
 
-    from src.repositories import get_file_repository
-
     file_repository = get_file_repository()
     file_record = file_repository.get_file_for_user(file_id, user_id)
 
@@ -210,5 +211,6 @@ def import_run(file_id):
 
     if success:
         return jsonify({"message": message}), 200
-    else:
-        return jsonify({"error": message}), 400 if "đã được nhập" in message else 404
+
+    status_code = 400 if "đã được nhập" in message else 404
+    return jsonify({"error": message}), status_code

@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 from flask_sqlalchemy import SQLAlchemy
-from src.database.models import Task
+from src.database.models import Task, TaskStatus
 from src.repositories.base_repository import AbstractRepository
 from datetime import datetime
 
@@ -61,10 +61,10 @@ class TaskRepository(AbstractRepository):
         return self.find(user_id=user_id)
 
     def get_pending(self, user_id: int) -> List[Task]:
-        return self.find(user_id=user_id, status="pending")
+        return self.find(user_id=user_id, status=TaskStatus.pending)
 
     def get_completed(self, user_id: int) -> List[Task]:
-        return self.find(user_id=user_id, status="completed")
+        return self.find(user_id=user_id, status=TaskStatus.completed)
 
     def get_users_with_tasks(self) -> List[int]:
         return [
@@ -78,7 +78,7 @@ class TaskRepository(AbstractRepository):
         if filter_type == "completed":
             query = query.filter_by(is_done=True)
         elif filter_type == "pending":
-            query = query.filter_by(is_done=False, status="pending")
+            query = query.filter_by(is_done=False, status=TaskStatus.pending)
         elif filter_type == "overdue":
             query = query.filter(
                 self.model.is_done.is_(False), self.model.deadline < datetime.now()
@@ -106,16 +106,12 @@ class TaskRepository(AbstractRepository):
 
     def complete_task(self, task_id: int, user_id: int) -> Optional[Task]:
         """Mark a task as completed for a specific user."""
-        from src.database.models import TaskStatus
-
         return self.update_task_for_user(
             task_id, user_id, is_done=True, status=TaskStatus.completed
         )
 
     def uncomplete_task(self, task_id: int, user_id: int) -> Optional[Task]:
         """Mark a task as uncompleted for a specific user."""
-        from src.database.models import TaskStatus
-
         return self.update_task_for_user(
             task_id, user_id, is_done=False, status=TaskStatus.pending
         )

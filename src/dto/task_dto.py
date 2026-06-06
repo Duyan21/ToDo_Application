@@ -60,7 +60,7 @@ class TaskCreateDTO:
     reminder_minutes: int = 0
 
     def __post_init__(self):
-        if self.deadline:
+        if self.deadline and isinstance(self.deadline, str):
             self.deadline = datetime.strptime(self.deadline, '%Y-%m-%dT%H:%M')
 
 
