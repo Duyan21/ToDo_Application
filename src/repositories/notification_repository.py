@@ -16,7 +16,7 @@ class NotificationRepository(AbstractRepository):
         return entity
 
     def get_by_id(self, entity_id: int) -> Optional[Notification]:
-        return self.model.query.get(entity_id)
+        return self._db.session.get(self.model, entity_id)
 
     def get_all(self) -> List[Notification]:
         return self.model.query.all()
