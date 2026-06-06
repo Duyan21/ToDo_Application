@@ -131,9 +131,9 @@ class TaskService:
                 )
                 priority_str = parts[3].strip() if len(parts) > 3 else "medium"
                 try:
-                    priority = Priority(priority_str)
+                    priority_str = Priority(priority_str).value
                 except ValueError:
-                    priority = Priority.medium
+                    priority_str = Priority.medium.value
                 reminder_minutes = (
                     int(parts[4]) if len(parts) > 4 and parts[4].isdigit() else 0
                 )

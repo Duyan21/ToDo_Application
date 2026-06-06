@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from src.database.models import NotificationType
 
+
 @dataclass
 class NotificationDTO:
     """Data Transfer Object for Notification model"""
@@ -23,7 +24,11 @@ class NotificationDTO:
             id=notification_model.id,
             task_id=notification_model.task_id,
             user_id=notification_model.user_id,
-            type=notification_model.type.value if isinstance(notification_model.type, NotificationType) else notification_model.type,
+            type=(
+                notification_model.type.value
+                if isinstance(notification_model.type, NotificationType)
+                else notification_model.type
+            ),
             message=notification_model.message,
             notify_time=notification_model.notify_time,
             sent=notification_model.sent,
@@ -45,6 +50,7 @@ class NotificationDTO:
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+
 @dataclass
 class NotificationCreateDTO:
     """DTO for creating new notifications"""
@@ -53,6 +59,7 @@ class NotificationCreateDTO:
     type: str  # REMINDER, OVERDUE
     message: str
     notify_time: Optional[datetime] = None
+
 
 @dataclass
 class NotificationUpdateDTO:

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+
 @dataclass
 class FileDTO:
     """Data Transfer Object for File model"""
@@ -32,12 +33,14 @@ class FileDTO:
             'path': self.path
         }
 
+
 @dataclass
 class FileCreateDTO:
     """DTO for creating new file records"""
     user_id: int
     file_type: str  # JSON, CSV
     path: str
+
 
 @dataclass
 class FileUpdateDTO:

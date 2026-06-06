@@ -69,9 +69,9 @@ class FileRepository(AbstractRepository):
         query = self.model.query.filter_by(user_id=user_id)
 
         if filter_type == "pending":
-            query = query.filter(self.model.is_imported == False)
+            query = query.filter(self.model.is_imported.is_(False))
         elif filter_type == "imported":
-            query = query.filter(self.model.is_imported == True)
+            query = query.filter(self.model.is_imported.is_(True))
 
         return query.all()
 

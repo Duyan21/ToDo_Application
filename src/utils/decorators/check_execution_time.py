@@ -7,6 +7,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
+
 def check_execution_time(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
