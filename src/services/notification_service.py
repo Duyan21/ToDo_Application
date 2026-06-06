@@ -87,14 +87,13 @@ class NotificationService:
                 # Create or update overdue
                 if not existing:
                     days_overdue = (now - task.deadline).days
-                    notification = Notification(
+                    notification_repository.create(
                         task_id=task.id,
                         user_id=user_id,
                         type=NotificationType.OVERDUE,
                         message=f'Task "{task.title}" đã quá hạn {days_overdue} ngày',
                         notify_time=now,
                     )
-                    notification_repository.create(notification)
                     synced_count += 1
 
             elif should_remind:
@@ -109,14 +108,13 @@ class NotificationService:
 
                 # Create or update reminder
                 if not existing:
-                    notification = Notification(
+                    notification_repository.create(
                         task_id=task.id,
                         user_id=user_id,
                         type=NotificationType.REMINDER,
                         message=f'Task "{task.title}" sắp đến hạn trong {task.reminder_minutes} phút',
                         notify_time=now,
                     )
-                    notification_repository.create(notification)
                     synced_count += 1
 
             else:
@@ -149,8 +147,7 @@ class NotificationService:
         if not notification or notification.user_id != user_id:
             return False
 
-        notification.is_read = True
-        notification_repository.update(notification)
+        notification_repository.update(notification.id, is_read=True)
         return True
 
     @staticmethod
@@ -159,8 +156,7 @@ class NotificationService:
         notifications = notification_repository.find(user_id=user_id, is_read=False)
 
         for notification in notifications:
-            notification.is_read = True
-            notification_repository.update(notification)
+            notification_repository.update(notification.id, is_read=True)
 
     @staticmethod
     def clear_all_notifications(user_id) -> int:

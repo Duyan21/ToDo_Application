@@ -17,7 +17,7 @@ class TaskRepository(AbstractRepository):
         return entity
 
     def get_by_id(self, entity_id: int) -> Optional[Task]:
-        return self.model.query.get(entity_id)
+        return self._db.session.get(self.model, entity_id)
 
     def get_all(self) -> List[Task]:
         return self.model.query.all()

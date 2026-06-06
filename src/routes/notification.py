@@ -33,7 +33,7 @@ def get_notifications():
 def mark_notification_as_read(notification_id):
     user_id = session.get("user_id")
 
-    success = NotificationService.mark_notification_as_read(user_id, notification_id)
+    success = NotificationService.mark_notification_as_read(notification_id, user_id)
 
     if not success:
         return jsonify({"error": "Không tìm thấy notification"}), 404
