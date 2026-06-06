@@ -11,7 +11,7 @@ A modern task management application with real-time notifications and database s
 
 ## 📋 Prerequisites
 
-- Python 3.8+
+- Python 3.11+
 - SQL Server (recommended) or SQLite
 - Modern web browser
 
@@ -116,24 +116,34 @@ If you get connection errors:
 
 ```
 todo_app/
+├── .github/
+│   └── workflows/
+│       └── ci.yml             # GitHub Actions CI (lint + test)
 ├── src/
 │   ├── app/
-│   │   └── app.py              # Flask application setup
+│   │   └── app.py             # Flask application factory
 │   ├── routes/
 │   │   ├── auth.py            # Authentication endpoints
 │   │   ├── task.py            # Task management endpoints
 │   │   └── notification.py    # Notification endpoints
 │   ├── services/
+│   │   ├── auth_service.py
+│   │   ├── task_service.py
 │   │   └── notification_service.py  # Background job logic
+│   ├── repositories/          # Data access layer
 │   ├── database/
-│   │   ├── models.py          # SQLAlchemy models
-│   │   └── schema.sql         # Database schema
+│   │   └── models.py          # SQLAlchemy models
 │   ├── dto/                   # Data transfer objects
+│   ├── tests/
+│   │   ├── conftest.py        # Shared fixtures (in-memory SQLite)
+│   │   ├── test_auth.py
+│   │   ├── test_tasks.py
+│   │   ├── test_notifications.py
+│   │   └── test_dto.py
 │   ├── static/
-│   │   ├── css/
-│   │   └── js/
 │   └── templates/
-├── .env.example               # Environment configuration
+├── .env.example               # Environment configuration template
+├── pytest.ini                 # pytest configuration
 ├── requirements.txt
 └── README.md
 ```
@@ -209,16 +219,61 @@ DB_DRIVER=ODBC Driver 17 for SQL Server
 ### Running Tests
 
 ```bash
-# Add test commands when implemented
-python -m pytest tests/
+# Run all tests
+pytest
+
+# Run with coverage report
+pytest --cov=src --cov-report=term-missing
+
+# Run a specific test file
+pytest src/tests/test_auth.py -v
 ```
+
+Tests use an in-memory SQLite database — no SQL Server required.
+
+The test suite covers 132 test cases across 4 files:
+
+| File | Coverage |
+|------|----------|
+| `test_auth.py` | Register, signin, logout routes + AuthService |
+| `test_tasks.py` | CRUD routes + TaskService filters & ownership |
+| `test_notifications.py` | Notification routes + sync logic |
+| `test_dto.py` | DTO serialization & validation |
 
 ### Code Style
 
-- Follow PEP 8 Python style guide
+- Follow PEP 8 Python style guide (enforced by **flake8**, max line length 120)
+- Additional checks via **ruff**
 - Use meaningful variable names
-- Add docstrings for functions
 - Keep functions focused and small
+
+```bash
+# Run linters locally
+pip install flake8 ruff
+flake8 src/ --exclude=src/tests --max-line-length=120 --extend-ignore=E203,W503
+ruff check src/ --exclude src/tests --line-length 120
+```
+
+## ⚙️ CI/CD
+
+GitHub Actions runs automatically on every push and pull request to `main` or `develop`.
+
+### Pipeline
+
+| Job | Steps | Trigger |
+|-----|-------|---------|
+| **Lint** | flake8 → ruff | push / PR |
+| **Test** | pytest + coverage (min 60%) | after lint passes |
+
+A pull request cannot be merged if lint or tests fail.
+
+### Running CI locally
+
+```bash
+pip install flake8 ruff pytest pytest-cov
+flake8 src/ --exclude=src/tests --max-line-length=120 --extend-ignore=E203,W503
+pytest --cov=src --cov-report=term-missing --cov-fail-under=60
+```
 
 ## 🐛 Troubleshooting
 
