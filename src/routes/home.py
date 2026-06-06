@@ -3,6 +3,7 @@ from src.database.models import User
 
 home_bp = Blueprint('home', __name__, template_folder='../../templates')
 
+
 @home_bp.route('/home')
 def home():
     user_id = session.get('user_id')

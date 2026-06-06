@@ -1,7 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 from src.database.models import Priority, TaskStatus
+
 
 @dataclass
 class TaskDTO:
@@ -48,6 +49,7 @@ class TaskDTO:
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
+
 @dataclass
 class TaskCreateDTO:
     """DTO for creating new tasks"""
@@ -60,6 +62,7 @@ class TaskCreateDTO:
     def __post_init__(self):
         if self.deadline:
             self.deadline = datetime.strptime(self.deadline, '%Y-%m-%dT%H:%M')
+
 
 @dataclass
 class TaskUpdateDTO:

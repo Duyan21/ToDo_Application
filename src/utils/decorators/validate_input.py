@@ -7,6 +7,7 @@ _EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
 logger = logging.getLogger(__name__)
 
+
 def validate_input(**rules):
     def decorator(func):
         @wraps(func)
@@ -19,9 +20,9 @@ def validate_input(**rules):
             min_length = rules.get('min_length', {})
             email_fields = rules.get('email_fields', [])
 
-            missing = [f for f in required_rules 
-                      if f not in data or data.get(f) is None]
-            
+            missing = [f for f in required_rules
+                       if f not in data or data.get(f) is None]
+
             if missing:
                 msg = f"Thiếu: {', '.join(missing)}"
                 logger.warning("Validation failed for %s: %s", func.__name__, msg)

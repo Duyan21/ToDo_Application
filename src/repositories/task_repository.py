@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 from flask_sqlalchemy import SQLAlchemy
 from src.database.models import Task
 from src.repositories.base_repository import AbstractRepository
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class TaskRepository(AbstractRepository):
@@ -81,7 +81,7 @@ class TaskRepository(AbstractRepository):
             query = query.filter_by(is_done=False, status="pending")
         elif filter_type == "overdue":
             query = query.filter(
-                self.model.is_done == False, self.model.deadline < datetime.now()
+                self.model.is_done.is_(False), self.model.deadline < datetime.now()
             )
 
         return query.all()

@@ -4,6 +4,7 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
+
 class Priority(enum.Enum):
     low = 'low'
     medium = 'medium'
@@ -12,6 +13,7 @@ class Priority(enum.Enum):
     def __str__(self):
         return self.value
 
+
 class TaskStatus(enum.Enum):
     pending = 'pending'
     completed = 'completed'
@@ -19,12 +21,14 @@ class TaskStatus(enum.Enum):
     def __str__(self):
         return self.value
 
+
 class NotificationType(enum.Enum):
     REMINDER = 'REMINDER'
     OVERDUE = 'OVERDUE'
 
     def __str__(self):
         return self.value
+
 
 class User(db.Model):
     __tablename__ = 'Users'
@@ -50,7 +54,7 @@ class Task(db.Model):
     status = db.Column(db.Enum(TaskStatus), default=TaskStatus.pending)
     reminder_minutes = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.now)
-    
+
 
 class File(db.Model):
     __tablename__ = 'Files'
@@ -60,6 +64,7 @@ class File(db.Model):
     file_path = db.Column(db.String(500), nullable=False)
     is_imported = db.Column(db.Boolean, default=False)
     uploaded_at = db.Column(db.DateTime, default=datetime.now)
+
 
 class Notification(db.Model):
     __tablename__ = 'Notifications'
