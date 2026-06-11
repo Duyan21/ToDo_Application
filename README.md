@@ -1,302 +1,394 @@
 # Todo Application
 
-A modern task management application with real-time notifications and database support.
+> A self-hosted, deadline-aware task management web app with automatic real-time notifications.
 
-## 🎓 Project Information
+---
 
-- Build a complete task management application
-- Implement real-time notification system
-- Integrate SQL Server database
-- Apply practical web programming knowledge
+## Overview
 
-## 📋 Prerequisites
+**Todo Application** is a multi-user web application for personal task management. Users can create tasks with deadlines, set per-task reminder windows, and receive automatic in-app notifications — no manual refresh required.
 
-- Python 3.11+
-- SQL Server (recommended) or SQLite
-- Modern web browser
+Most lightweight todo tools are passive: they store tasks but never surface them again. This app solves that by running a background scheduler that continuously monitors deadlines and pushes alerts into each user's notification feed. A task approaching its deadline triggers a **REMINDER**; a task that has passed its deadline is escalated to **OVERDUE**. Completing the task clears all its notifications automatically.
 
-## 🛠️ Installation
+The project was developed as a Python web programming course assignment at the **University of Information Technology (UIT)**, Semester 2 — 2025/2026.
 
-### Quick Setup (SQL Server)
+---
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Duyan21/ToDo_Application.git
-   cd todo_app
-   ```
+## Key Features
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   pip install pyodbc  # SQL Server driver
-   ```
+- **Task CRUD** — create, edit, complete, and delete tasks with title, description, deadline, and priority
+- **Deadline reminders** — configurable reminder window per task (e.g. notify 30 minutes before deadline)
+- **Automatic notifications** — background scheduler fires every 3 seconds; no polling from the client required
+- **Overdue escalation** — REMINDER notifications are automatically replaced by OVERDUE when a deadline passes
+- **Bulk CSV import** — upload a `.csv` file to create multiple tasks at once
+- **Session-based authentication** — email + password registration and login
+- **Task filtering** — view all, pending-only, or completed-only tasks
+- **Responsive UI** — Bootstrap-based, works on desktop and mobile
 
-3. **Database Setup**
-   - Open SQL Server Management Studio
-   - Run `src/database/schema.sql` (auto-creates `todo_app_db`)
-   
-4. **Environment Configuration**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your SQL Server details:
-   DB_HOST=localhost\SQLEXPRESS
-   DB_NAME=todo_app_db
-   DB_DRIVER=ODBC Driver 17 for SQL Server
-   ```
+---
 
-5. **Run the application**
-   ```bash
-   python main.py
-   ```
+## Tech Stack
 
-### Development Setup (SQLite)
+| Layer | Technology |
+|---|---|
+| Language | Python 3.11+ |
+| Web framework | Flask 3.1 |
+| ORM | SQLAlchemy 2.0 + Flask-SQLAlchemy 3.1 |
+| Database | SQL Server (production) / SQLite (development fallback) |
+| Background jobs | APScheduler 3.11 |
+| Frontend | HTML5, CSS3, JavaScript, Bootstrap |
+| Auth | Flask sessions + Werkzeug password hashing |
+| Testing | pytest + pytest-cov |
+| Linting | flake8 + ruff |
+| CI/CD | GitHub Actions |
 
-For quick development without SQL Server:
+---
 
-```bash
-# Comment out SQL Server variables in .env
-# The app will automatically fallback to SQLite
+## Architecture
 
-python main.py
+The application is structured in four horizontal layers. Each layer depends only on the layer below it.
+
+```
+HTTP Request
+     │
+     ▼
+┌─────────────┐
+│   Routes    │  Input validation, session checks, HTTP responses
+└──────┬──────┘
+       │
+┌──────▼──────┐
+│  Services   │  Business logic, orchestration
+└──────┬──────┘
+       │
+┌──────▼──────┐
+│Repositories │  All database queries, no business logic
+└──────┬──────┘
+       │
+┌──────▼──────┐
+│   Models    │  SQLAlchemy ORM definitions
+└─────────────┘
 ```
 
-## 🗄️ Database Configuration
+**DTOs** (`src/dto/`) decouple the database models from API responses — services accept and return DTOs, never raw ORM objects.
 
-### SQL Server Options
+**Custom decorators** (`src/utils/decorators/`) handle cross-cutting concerns: `@require_auth` guards routes, `@validate_input` enforces field rules, `@check_execution_time` measures route latency.
 
-Choose one of these configurations in `.env`:
+### Notification pipeline
 
-```bash
-# Option 1: SQL Server Express (most common)
-DB_HOST=localhost\SQLEXPRESS
-DB_NAME=todo_app_db
-DB_DRIVER=ODBC Driver 17 for SQL Server
-
-# Option 2: SQL Server Standard
-DB_HOST=localhost
-DB_NAME=todo_app_db
-DB_DRIVER=ODBC Driver 17 for SQL Server
-
-# Option 3: Named Instance
-DB_HOST=localhost\SQL2019
-DB_NAME=todo_app_db
-DB_DRIVER=ODBC Driver 18 for SQL Server
+```
+Task saved with deadline
+         │
+         ▼
+  APScheduler — every 3 s
+         │
+  ┌──────┴────────────────────────────────┐
+  │                                       │
+deadline − reminder_minutes ≤ now    deadline < now
+         │                                │
+  REMINDER created               OVERDUE created
+  (OVERDUE removed if exists)    (REMINDER removed if exists)
+         │                                │
+         └──────────────┬────────────────┘
+                        │
+               task marked complete
+                        │
+               all notifications deleted
 ```
 
-### Troubleshooting
+### Database schema
 
-If you get connection errors:
-1. Verify SQL Server is running
-2. Check Windows Firewall allows SQL Server connections
-3. Verify ODBC driver name matches your installed version
-4. For Express edition, enable TCP/IP in SQL Server Configuration Manager
+| Table | Key columns |
+|---|---|
+| `Users` | `id`, `email` (unique), `password_hash`, `created_at` |
+| `Tasks` | `id`, `user_id`, `title`, `deadline`, `priority`, `status`, `reminder_minutes` |
+| `Notifications` | `id`, `task_id`, `user_id`, `type` (REMINDER / OVERDUE), `is_read` |
+| `Files` | `id`, `user_id`, `filename`, `file_path`, `is_imported` |
 
-## 📚 API Documentation
+Indexed columns: `Tasks.user_id`, `Tasks.deadline`, `Tasks.is_done`, `Notifications.task_id`, `Notifications.user_id`.
 
-### Authentication
-- `POST /auth/login` - User login
-- `POST /auth/register` - User registration
-- `POST /auth/logout` - User logout
+---
 
-### Tasks
-- `GET /tasks` - Get all tasks with filters
-- `POST /tasks` - Create new task
-- `PUT /tasks/<id>/edit` - Update task
-- `PUT /tasks/<id>/complete` - Mark task as complete
-- `PUT /tasks/<id>/uncomplete` - Mark task as incomplete
-- `DELETE /tasks/<id>` - Delete task
-
-### Notifications
-- `GET /notifications` - Get user notifications
-- `POST /notifications/<id>/read` - Mark notification as read
-- `POST /notifications/read-all` - Mark all as read
-- `POST /notifications/clear` - Clear all notifications
-
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 todo_app/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml             # GitHub Actions CI (lint + test)
+│       └── ci.yml                     # GitHub Actions: lint → test
 ├── src/
 │   ├── app/
-│   │   └── app.py             # Flask application factory
+│   │   └── app.py                     # Flask application factory
+│   ├── common/
+│   │   └── errors.py                  # Domain exceptions (AuthError, etc.)
+│   ├── database/
+│   │   ├── models.py                  # SQLAlchemy ORM models
+│   │   └── schema.sql                 # SQL Server DDL script
+│   ├── dto/
+│   │   ├── file_dto.py
+│   │   ├── notification_dto.py
+│   │   ├── task_dto.py
+│   │   └── user_dto.py
+│   ├── repositories/
+│   │   ├── base_repository.py
+│   │   ├── file_repository.py
+│   │   ├── notification_repository.py
+│   │   ├── task_repository.py
+│   │   └── user_repository.py
 │   ├── routes/
-│   │   ├── auth.py            # Authentication endpoints
-│   │   ├── task.py            # Task management endpoints
-│   │   └── notification.py    # Notification endpoints
+│   │   ├── auth.py                    # /api/register  /api/signin  /api/logout
+│   │   ├── home.py                    # / home page
+│   │   ├── notification.py            # /notifications/*
+│   │   └── task.py                    # /tasks/*
 │   ├── services/
 │   │   ├── auth_service.py
-│   │   ├── task_service.py
-│   │   └── notification_service.py  # Background job logic
-│   ├── repositories/          # Data access layer
-│   ├── database/
-│   │   └── models.py          # SQLAlchemy models
-│   ├── dto/                   # Data transfer objects
+│   │   ├── file_service.py
+│   │   ├── notification_service.py    # Background deadline checker
+│   │   └── task_service.py
+│   ├── static/                        # CSS + JS assets
+│   ├── templates/                     # Jinja2 HTML templates
 │   ├── tests/
-│   │   ├── conftest.py        # Shared fixtures (in-memory SQLite)
+│   │   ├── conftest.py                # Fixtures — in-memory SQLite, test client
 │   │   ├── test_auth.py
-│   │   ├── test_tasks.py
+│   │   ├── test_dto.py
 │   │   ├── test_notifications.py
-│   │   └── test_dto.py
-│   ├── static/
-│   └── templates/
-├── .env.example               # Environment configuration template
-├── pytest.ini                 # pytest configuration
-├── requirements.txt
-└── README.md
+│   │   └── test_tasks.py
+│   └── utils/
+│       ├── decorators/
+│       │   ├── check_execution_time.py
+│       │   ├── logging.py
+│       │   ├── require_auth.py
+│       │   └── validate_input.py
+│       └── generators/
+│           └── read_csv.py
+├── upload/                            # Runtime directory for uploaded CSV files
+├── .env.example
+├── main.py
+├── pytest.ini
+└── requirements.txt
 ```
 
-## 🔧 Technical Features
+---
 
-### Notification System Architecture
+## Getting Started
 
-- **Background Scheduler**: APScheduler runs every 3 seconds
-- **Real-time Sync**: Uses database joins for current task status
-- **Optimized Queries**: Batch operations for performance
-- **Clean Separation**: API routes, service layer, UI components
+### Prerequisites
 
-### Database Design
+- Python 3.11+
+- A modern web browser
+- *(Optional)* SQL Server + ODBC Driver 17 or 18 for production use
 
-- **Users**: User accounts and authentication
-- **Tasks**: Task management with deadlines and reminders
-- **Notifications**: Real-time alert system
-- **Files**: File attachments (future feature)
+---
 
-### Performance Optimizations
+### Option A — SQLite (quickest, no database install)
 
-- **Database Indexes**: Optimized for common queries
-- **Batch Operations**: Reduced database round trips
-- **Clean Logging**: Minimal console output
-- **Efficient Queries**: Optimized SQLAlchemy operations
-
-## 🎯 Usage Examples
-
-### Creating a Task with Reminder
-
-1. Click "Add Task"
-2. Fill in task details
-3. Set deadline
-4. Set reminder (e.g., 30 minutes before)
-5. Save task
-
-### Notification Workflow
-
-1. **Deadline Approaches**: Reminder notification appears
-2. **Deadline Passes**: Overdue notification replaces reminder
-3. **Task Completed**: All notifications automatically removed
-4. **Manual Actions**: Mark as read, clear all
-
-### Real-time Updates
-
-- Background job syncs notifications every 3 seconds
-- Task changes immediately reflect in notification status
-- No page refresh needed for notification updates
-
-### Technical Requirements
-- ✅ Frontend: HTML5, CSS3, JavaScript, Bootstrap
-- ✅ Backend: Python Flask Framework
-- ✅ Database: SQL Server with SQLAlchemy ORM
-- ✅ Authentication: Session-based authentication
-- ✅ Real-time: Background scheduler with APScheduler
-- ✅ Responsive: Mobile-friendly design
-
-## 📝 Development Notes
-
-### Environment Variables
+SQLite is used automatically when SQL Server environment variables are absent. Recommended for development and evaluation.
 
 ```bash
-# Flask Configuration
-SECRET_KEY=your-secret-key-here
+# 1. Clone
+git clone https://github.com/Duyan21/ToDo_Application.git
+cd todo_app
 
-# Database Configuration
+# 2. Create and activate a virtual environment
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS / Linux
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Configure environment
+cp .env.example .env
+# Open .env and set a SECRET_KEY. Leave DB_* lines commented out.
+
+# 5. Run
+python main.py
+```
+
+Open `http://localhost:5000` in your browser.
+
+---
+
+### Option B — SQL Server
+
+```bash
+# Additional driver
+pip install pyodbc
+```
+
+**Create the database**
+
+Open SQL Server Management Studio and execute `src/database/schema.sql`.  
+This creates the `todo_app_db` database and all required tables.
+
+**Configure `.env`**
+
+```bash
+cp .env.example .env
+```
+
+Uncomment and fill in the block that matches your SQL Server edition:
+
+```dotenv
+SECRET_KEY=replace-with-a-secure-random-value
+
+# SQL Server Express (default local install)
 DB_HOST=localhost\SQLEXPRESS
 DB_NAME=todo_app_db
 DB_DRIVER=ODBC Driver 17 for SQL Server
+
+# SQL Server Standard / Default instance
+# DB_HOST=localhost
+# DB_NAME=todo_app_db
+# DB_DRIVER=ODBC Driver 17 for SQL Server
+
+# Named instance (e.g. SQL Server 2019)
+# DB_HOST=localhost\SQL2019
+# DB_NAME=todo_app_db
+# DB_DRIVER=ODBC Driver 18 for SQL Server
 ```
 
-### Running Tests
+```bash
+python main.py
+```
+
+**Connection troubleshooting**
+
+| Error | Likely cause | Fix |
+|---|---|---|
+| `Login failed` | SQL Server not running | Start the SQL Server service |
+| `ODBC driver not found` | Driver name mismatch | Check `odbcad32.exe` → System DSN for the exact name |
+| TCP connection timeout | TCP/IP not enabled | Enable TCP/IP in SQL Server Configuration Manager |
+| Firewall block | Windows Firewall | Allow port 1433 for SQL Server |
+
+---
+
+## Usage Guide
+
+### First run
+
+1. Navigate to `http://localhost:5000`
+2. Click **Register** and create an account
+3. You are redirected to the task list after registration
+
+### Creating a task
+
+1. Click **Add Task**
+2. Fill in: title (required), description, deadline, priority, and reminder window
+3. Save — the task appears in your list immediately
+
+### Notifications
+
+Notifications appear in the top-right bell icon. No page refresh is needed.
+
+| Notification type | When it appears |
+|---|---|
+| **REMINDER** | `now >= deadline − reminder_minutes` |
+| **OVERDUE** | `now > deadline` (replaces REMINDER) |
+| *(cleared)* | Task is marked complete |
+
+### Bulk CSV import
+
+1. Go to **Import** (`/tasks/import`)
+2. Download the sample CSV to see the expected format
+3. Upload your filled-in CSV
+4. Click **Run Import** — tasks are created and the file is marked as imported
+
+---
+
+## API Reference
+
+All write endpoints accept and return JSON. Page routes return HTML.
+
+### Authentication
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/register` | Create a new account |
+| `POST` | `/api/signin` | Sign in; starts a session |
+| `POST` | `/api/logout` | Invalidate the current session |
+
+### Tasks
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/tasks` | Task list page |
+| `POST` | `/tasks` | Create a task |
+| `PUT` | `/tasks/<id>/edit` | Update task fields |
+| `PUT` | `/tasks/<id>/complete` | Mark as complete |
+| `PUT` | `/tasks/<id>/uncomplete` | Revert to pending |
+| `DELETE` | `/tasks/<id>/delete` | Delete a task |
+
+### CSV Import
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/tasks/import` | Import page |
+| `GET` | `/tasks/import/download-sample` | Download sample CSV |
+| `POST` | `/tasks/upload` | Upload a CSV file |
+| `POST` | `/tasks/import-run/<id>` | Execute import from uploaded file |
+
+### Notifications
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/notifications` | Get all notifications |
+| `POST` | `/notifications/<id>/read` | Mark one notification as read |
+| `POST` | `/notifications/read-all` | Mark all as read |
+| `POST` | `/notifications/clear` | Delete all notifications |
+
+---
+
+## Testing
+
+Tests run against an in-memory SQLite database — no SQL Server required.
 
 ```bash
-# Run all tests
+# Run the full suite
 pytest
 
-# Run with coverage report
+# With coverage report
 pytest --cov=src --cov-report=term-missing
 
-# Run a specific test file
+# Single file
 pytest src/tests/test_auth.py -v
 ```
 
-Tests use an in-memory SQLite database — no SQL Server required.
+141 test cases across 4 files:
 
-The test suite covers 132 test cases across 4 files:
+| File | Covers |
+|---|---|
+| `test_auth.py` | Register / sign-in / logout routes and AuthService |
+| `test_tasks.py` | Task CRUD routes, service filters, ownership checks |
+| `test_notifications.py` | Notification routes and background sync logic |
+| `test_dto.py` | DTO serialization and field validation |
 
-| File | Coverage |
-|------|----------|
-| `test_auth.py` | Register, signin, logout routes + AuthService |
-| `test_tasks.py` | CRUD routes + TaskService filters & ownership |
-| `test_notifications.py` | Notification routes + sync logic |
-| `test_dto.py` | DTO serialization & validation |
+---
 
-### Code Style
+## Code Quality & CI
 
-- Follow PEP 8 Python style guide (enforced by **flake8**, max line length 120)
-- Additional checks via **ruff**
-- Use meaningful variable names
-- Keep functions focused and small
+### Linting
 
 ```bash
-# Run linters locally
-pip install flake8 ruff
+# flake8 — PEP 8, max line length 120
 flake8 src/ --exclude=src/tests --max-line-length=120 --extend-ignore=E203,W503
+
+# ruff — additional fast checks
 ruff check src/ --exclude src/tests --line-length 120
 ```
 
-## ⚙️ CI/CD
+### CI pipeline (GitHub Actions)
 
-GitHub Actions runs automatically on every push and pull request to `main` or `develop`.
+Runs automatically on every push and pull request to `main` or `develop`.
 
-### Pipeline
+| Job | Steps | Condition |
+|---|---|---|
+| **lint** | flake8 → ruff | always |
+| **test** | pytest + coverage ≥ 60% | after lint passes |
 
-| Job | Steps | Trigger |
-|-----|-------|---------|
-| **Lint** | flake8 → ruff | push / PR |
-| **Test** | pytest + coverage (min 60%) | after lint passes |
-
-A pull request cannot be merged if lint or tests fail.
-
-### Running CI locally
+A pull request cannot be merged if either job fails.
 
 ```bash
-pip install flake8 ruff pytest pytest-cov
+# Reproduce CI locally (all tools are in requirements.txt)
 flake8 src/ --exclude=src/tests --max-line-length=120 --extend-ignore=E203,W503
 pytest --cov=src --cov-report=term-missing --cov-fail-under=60
 ```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**SQL Server Connection Error**
-- Verify SQL Server is running
-- Check ODBC driver installation
-- Confirm connection string in .env
-
-**Notifications Not Working**
-- Check background scheduler logs
-- Verify database schema is correct
-- Ensure task deadlines are set correctly
-
-**Performance Issues**
-- Check database indexes
-- Monitor background job execution time
-- Review query optimization
-
-### Getting Help
-
-1. Check the troubleshooting section above
-2. Review the database schema in `src/database/schema.sql`
-3. Examine the environment configuration in `.env.example`
-4. Check the API documentation for proper endpoint usage

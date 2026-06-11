@@ -1,25 +1,23 @@
+import logging
 from datetime import datetime, timedelta
 from src.repositories import get_notification_repository, get_task_repository
 from src.database.models import Notification, NotificationType
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationService:
     @staticmethod
     def check_and_create_notifications():
         """Sync notifications with current task status using real-time joins"""
-        try:
-            task_repository = get_task_repository()
-            users_with_tasks = task_repository.get_users_with_tasks()
-            print(f"Users with tasks: {users_with_tasks}")
-            if not users_with_tasks:
-                return
+        task_repository = get_task_repository()
+        users_with_tasks = task_repository.get_users_with_tasks()
+        if not users_with_tasks:
+            return
 
-            now = datetime.now()
-            for user_id in users_with_tasks:
-                NotificationService._sync_notifications_for_user(user_id, now)
-
-        except Exception as e:
-            raise e
+        now = datetime.now()
+        for user_id in users_with_tasks:
+            NotificationService._sync_notifications_for_user(user_id, now)
 
     @staticmethod
     def _sync_notifications_for_user(user_id, now):
@@ -86,12 +84,18 @@ class NotificationService:
 
                 # Create or update overdue
                 if not existing:
-                    days_overdue = (now - task.deadline).days
+                    delta = now - task.deadline
+                    days_overdue = delta.days
+                    if days_overdue >= 1:
+                        overdue_msg = f'{days_overdue} ngày'
+                    else:
+                        hours_overdue = int(delta.total_seconds() // 3600)
+                        overdue_msg = f'{hours_overdue} giờ' if hours_overdue >= 1 else 'vài phút'
                     notification_repository.create(
                         task_id=task.id,
                         user_id=user_id,
                         type=NotificationType.OVERDUE,
-                        message=f'Task "{task.title}" đã quá hạn {days_overdue} ngày',
+                        message=f'Task "{task.title}" đã quá hạn {overdue_msg}',
                         notify_time=now,
                     )
                     synced_count += 1

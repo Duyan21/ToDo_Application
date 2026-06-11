@@ -1,17 +1,20 @@
+import atexit
 import logging
-from dotenv import load_dotenv
 import os
-from flask import Flask
 import urllib
+from dotenv import load_dotenv
+from flask import Flask
+from apscheduler.schedulers.background import BackgroundScheduler
 from src.routes.auth import auth_bp
 from src.routes.home import home_bp
 from src.routes.task import task_bp
 from src.routes.notification import noti_bp
 from src.database.models import db
-from apscheduler.schedulers.background import BackgroundScheduler
 from src.services.notification_service import NotificationService
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 def create_app():
@@ -65,12 +68,10 @@ def create_app():
             id='notification_check_job'
         )
         scheduler.start()
-        print("Background scheduler started for notifications")
+        logger.info("Background scheduler started for notifications")
         return scheduler
 
     scheduler = start_scheduler()
-
-    import atexit
     atexit.register(lambda: scheduler.shutdown())
 
     return app
